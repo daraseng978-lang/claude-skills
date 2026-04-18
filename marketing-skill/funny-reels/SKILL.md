@@ -66,8 +66,10 @@ Pick ONE primary joke structure per reel — don't stack:
 - **Callback** — reference earlier reel / running gag.
 - **Contrast** — expectation vs reality, boss vs intern, 2015 vs 2026.
 - **Relatable-specific** — overly specific detail ("the exact moment you realize you CC'd the wrong Amanda").
+- **Confident Narrator Power Fantasy** — delusional first-person monologue + escalating AI-gen cutaways (60-90s format, Rahrah house style).
 
 See `references/comedy-frameworks.md` for examples.
+For the Confident-Narrator / AI 3D cartoon format specifically, see `references/style-inspo-rahrah.md` — includes visual spec, safe-target list, and 10 starter concepts.
 
 ### Step 4 — On-screen text & captions
 
@@ -166,6 +168,7 @@ Before shipping any reel, run through:
 
 - `references/comedy-frameworks.md` — joke structures with examples
 - `references/platform-specs.md` — FB/IG/TikTok dimensions, length caps, safe zones
+- `references/style-inspo-rahrah.md` — AI 3D cartoon style + confident-narrator format + safe-target concept list
 
 ## Scripts
 

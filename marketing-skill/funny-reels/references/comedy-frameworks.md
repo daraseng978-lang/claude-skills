@@ -78,6 +78,25 @@ Point out something mundane, then treat it like it's insane.
 
 **Why it works:** Low effort to shoot (talking head), high shareability.
 
+## 9. Confident Narrator Power Fantasy
+
+A single confident character monologues a delusional first-person "how I'm going to take over" story. Cuts to absurd AI-generated scenes illustrating each claim. Escalates scene by scene.
+
+**Structure:**
+- Narrator stays in one "hero" shot that recurs (e.g. at a desk, behind a podium)
+- Every 5s, cut to an absurd cutaway that literalizes what they just said
+- Claims get bigger: personal goal → industry domination → interplanetary
+- Narrator never breaks confidence, even as scenes get ridiculous
+
+**Example (90s, cartoon startup founder character):**
+- "In my first week, I closed 3 deals." → cutaway: founder shaking hand with a confused alien
+- "By month 3, we'll IPO." → cutaway: Toronto skyline with the founder's face on every billboard
+- "And within a year, I replace Sam Altman." → cutaway: Silicon Valley executives fainting dramatically
+
+**Why it works:** Commits HARD to the bit. The gap between stated confidence and visual absurdity is the joke. Perfect for AI-gen video — every claim gets its own surreal shot. See `references/style-inspo-rahrah.md` for production guide and safe-target concept list.
+
+**Do not use this format for:** real named people, real political groups, or detention/violence imagery. Punch at archetypes and systems, not individuals.
+
 ## Combining (Advanced)
 
 You CAN layer frameworks across a series, not within a single reel. Example:
