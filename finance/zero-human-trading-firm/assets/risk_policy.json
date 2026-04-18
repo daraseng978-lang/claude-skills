@@ -1,0 +1,23 @@
+{
+  "description": "Starting risk policy. Conservative defaults. Edit before going live.",
+  "version": 1,
+  "max_position_pct": 0.10,
+  "max_gross_exposure": 1.5,
+  "max_net_exposure": 1.0,
+  "max_leverage": 2.0,
+  "max_daily_drawdown": 0.05,
+  "per_asset_caps": {
+    "BTC-PERP": 0.25,
+    "ETH-PERP": 0.20
+  },
+  "venue_whitelist": [
+    "hyperliquid",
+    "bittensor-subnet",
+    "equities-broker"
+  ],
+  "notes": [
+    "This file lives in the risk-policy service, NOT on the agent filesystem.",
+    "Agents get a read-only check endpoint. They cannot edit this file.",
+    "Every change to this file requires a human PR review and a deliberate deploy."
+  ]
+}

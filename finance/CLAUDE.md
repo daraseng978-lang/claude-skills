@@ -7,8 +7,9 @@ This guide covers the finance skills and their Python automation tools.
 **Available Skills:**
 1. **financial-analyst/** - Financial statement analysis, ratio analysis, DCF valuation, budgeting, forecasting (4 Python tools)
 2. **saas-metrics-coach/** - SaaS financial health: ARR, MRR, churn, CAC, LTV, NRR, Quick Ratio, 12-month projections (3 Python tools)
+3. **zero-human-trading-firm/** - Autonomous multi-agent quant trading firm: org chart, strategy lifecycle ledger, hygienic backtester, hard-coded risk policy enforcer, paper-to-live promotion gate (6 Python tools)
 
-**Total Tools:** 7 Python automation tools, 5 knowledge bases, 6 templates
+**Total Tools:** 13 Python automation tools, 10 knowledge bases, 11 templates
 
 **Commands:** 2 (`/financial-health`, `/saas-health`)
 
@@ -82,6 +83,30 @@ python financial-analyst/scripts/forecast_builder.py forecast_data.json
 python financial-analyst/scripts/forecast_builder.py forecast_data.json --format json
 ```
 
+## Zero-Human Trading Firm Tools
+
+### Strategy Ledger (`zero-human-trading-firm/scripts/strategy_ledger.py`)
+Append-only ledger tracking every strategy through `proposed -> backtested -> red_teamed -> ready_for_paper -> paper -> live -> retired`. Includes sign-off flags for red team and risk officer.
+
+### Backtest Runner (`zero-human-trading-firm/scripts/backtest_runner.py`)
+Causal backtester with SMA/EMA cross and mean-revert templates. Enforces in-sample / out-of-sample split, realistic fees and slippage. Standard library only.
+
+### Risk Policy Enforcer (`zero-human-trading-firm/scripts/risk_policy_enforcer.py`)
+Deterministic order-level policy check. Agents cannot own this service — host behind an API they can call but cannot deploy to.
+
+### Research Synthesizer (`zero-human-trading-firm/scripts/research_synthesizer.py`)
+Deterministic keyword + density ranking over a directory of research files (transcripts, notes, papers).
+
+### Execution Gate (`zero-human-trading-firm/scripts/execution_gate.py`)
+Paper-to-live promotion checker. Defaults: min 30 trades, Sharpe >= 1.0, max drawdown <= 10%, both sign-offs present.
+
+### Firm Scaffolder (`zero-human-trading-firm/scripts/firm_init.py`)
+Creates a new firm workspace with role instruction stubs, empty ledger, starter risk policy, and importable org chart JSON.
+
+```bash
+python zero-human-trading-firm/scripts/firm_init.py --name "Lewis Ventures" --venue bittensor --out ./my-firm
+```
+
 ## Quality Standards
 
 **All finance Python tools must:**
@@ -100,7 +125,7 @@ python financial-analyst/scripts/forecast_builder.py forecast_data.json --format
 
 ---
 
-**Last Updated:** March 2026
-**Skills Deployed:** 2/2 finance skills production-ready
-**Total Tools:** 7 Python automation tools
+**Last Updated:** April 2026
+**Skills Deployed:** 3/3 finance skills production-ready
+**Total Tools:** 13 Python automation tools
 **Commands:** /financial-health, /saas-health
