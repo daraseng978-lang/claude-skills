@@ -221,6 +221,8 @@ Attach `engineering/self-eval/SKILL.md` as a **reviewer** on this routine so a s
 
 If you're running this autonomously on a VPS in founder-investor mode, see [PAPERCLIP.md](PAPERCLIP.md) for an end-to-end deployment guide: installing Paperclip, importing the org chart, attaching recommended skills per role, wiring the out-of-band risk service (the non-negotiable boundary), and setting up the monthly founder-report routine.
 
+For non-technical founders: [CEO_BOOTSTRAP.md](CEO_BOOTSTRAP.md) is the single prompt you paste to a fresh CEO agent on day one. It gives the CEO a first-week checklist (scaffold, import, wire routines, dry-run one strategy) with explicit **STOP** points where it must ask you before proceeding.
+
 ## Reference Library
 
 - [`references/backtesting-hygiene.md`](references/backtesting-hygiene.md) — lookahead, survivorship, overfit, walk-forward, fee/slip realism
