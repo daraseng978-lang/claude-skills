@@ -65,6 +65,7 @@ A complete virtual board of directors: 28 skills covering 10 executive roles, or
 | **Culture Architect** | `culture-architect/` | Build and operationalize culture |
 | **Company OS** | `company-os/` | EOS/Scaling Up operating system |
 | **Founder Coach** | `founder-coach/` | Founder development and growth |
+| **Solo Founder** | `solo-founder/` | Chief Everything Officer advisor for solo founders and indie hackers |
 | **Strategic Alignment** | `strategic-alignment/` | Strategy cascade, silo detection |
 | **Change Management** | `change-management/` | ADKAR-based change rollout |
 | **Internal Narrative** | `internal-narrative/` | One story across all audiences |
