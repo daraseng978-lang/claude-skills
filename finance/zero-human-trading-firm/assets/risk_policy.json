@@ -1,14 +1,18 @@
 {
-  "description": "Starting risk policy. Conservative defaults. Edit before going live.",
-  "version": 1,
-  "max_position_pct": 0.10,
-  "max_gross_exposure": 1.5,
-  "max_net_exposure": 1.0,
-  "max_leverage": 2.0,
-  "max_daily_drawdown": 0.05,
+  "description": "Founder-mode risk policy. Tighter defaults because no human signs paper->live. Edit before going live.",
+  "version": 2,
+  "mode": "founder_autonomous",
+  "max_position_pct": 0.05,
+  "max_gross_exposure": 1.0,
+  "max_net_exposure": 0.75,
+  "max_leverage": 1.0,
+  "max_daily_drawdown": 0.03,
+  "max_weekly_drawdown": 0.06,
+  "max_monthly_drawdown": 0.10,
+  "firm_kill_switch_monthly_pct": 0.15,
   "per_asset_caps": {
-    "BTC-PERP": 0.25,
-    "ETH-PERP": 0.20
+    "BTC-PERP": 0.15,
+    "ETH-PERP": 0.10
   },
   "venue_whitelist": [
     "hyperliquid",
@@ -18,6 +22,8 @@
   "notes": [
     "This file lives in the risk-policy service, NOT on the agent filesystem.",
     "Agents get a read-only check endpoint. They cannot edit this file.",
-    "Every change to this file requires a human PR review and a deliberate deploy."
+    "Every change to this file requires the founder's signature + a deliberate deploy.",
+    "Founder-mode amplifies the risk of removing humans from paper->live. Defaults are tighter.",
+    "firm_kill_switch_monthly_pct: if firm-level monthly drawdown breaches this, halt ALL trading and page the founder."
   ]
 }

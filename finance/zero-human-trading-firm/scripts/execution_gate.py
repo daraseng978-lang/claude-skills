@@ -40,7 +40,32 @@ def find(ledger: Dict[str, Any], sid: str) -> Dict[str, Any]:
     raise SystemExit(f"ERROR: strategy {sid} not found")
 
 
-def evaluate(strategy: Dict[str, Any], min_trades: int, min_sharpe: float, max_dd: float) -> Tuple[bool, List[str]]:
+def _last_signer(strategy: Dict[str, Any], flag: str) -> str:
+    """Find the last event that set `flag` and return the signer id."""
+    for event in reversed(strategy.get("_events", []) or []):
+        if event.get("type") == "sign" and event.get("payload", {}).get("flag") == flag:
+            return event["payload"].get("by", "")
+    return ""
+
+
+def _signer_from_ledger(ledger: Dict[str, Any], sid: str, flag: str) -> str:
+    """Find who signed a given flag for strategy sid by scanning ledger events."""
+    for event in reversed(ledger.get("events", [])):
+        if event.get("id") != sid or event.get("type") != "sign":
+            continue
+        if event.get("payload", {}).get("flag") == flag:
+            return event["payload"].get("by", "")
+    return ""
+
+
+def evaluate(
+    strategy: Dict[str, Any],
+    min_trades: int,
+    min_sharpe: float,
+    max_dd: float,
+    require_distinct_signers: bool = False,
+    ledger: Dict[str, Any] = None,
+) -> Tuple[bool, List[str]]:
     errors: List[str] = []
 
     if strategy["state"] != "paper":
@@ -67,13 +92,33 @@ def evaluate(strategy: Dict[str, Any], min_trades: int, min_sharpe: float, max_d
     if not flags.get("risk_officer_signed_off"):
         errors.append("risk_officer_signed_off = False")
 
+    if require_distinct_signers and ledger is not None and not errors:
+        rt_signer = _signer_from_ledger(ledger, strategy["id"], "red_team_signed_off")
+        ro_signer = _signer_from_ledger(ledger, strategy["id"], "risk_officer_signed_off")
+        if not rt_signer or rt_signer == "unknown":
+            errors.append("red_team signer identity missing (use --by when signing)")
+        if not ro_signer or ro_signer == "unknown":
+            errors.append("risk_officer signer identity missing (use --by when signing)")
+        if rt_signer and ro_signer and rt_signer == ro_signer:
+            errors.append(
+                f"red_team and risk_officer signed by same identity '{rt_signer}' "
+                f"— founder mode requires distinct signers"
+            )
+
     return (len(errors) == 0), errors
 
 
 def cmd_promote(args: argparse.Namespace) -> int:
     ledger = load_ledger(args.ledger)
     strategy = find(ledger, args.id)
-    ok, errors = evaluate(strategy, args.min_trades, args.min_sharpe, args.max_dd)
+    ok, errors = evaluate(
+        strategy,
+        args.min_trades,
+        args.min_sharpe,
+        args.max_dd,
+        require_distinct_signers=args.founder_mode,
+        ledger=ledger,
+    )
     result = {
         "id": args.id,
         "name": strategy["name"],
@@ -84,6 +129,7 @@ def cmd_promote(args: argparse.Namespace) -> int:
             "min_trades": args.min_trades,
             "min_sharpe": args.min_sharpe,
             "max_dd": args.max_dd,
+            "founder_mode": args.founder_mode,
         },
         "metrics": strategy.get("metrics", {}),
     }
@@ -109,6 +155,11 @@ def main() -> int:
     pm.add_argument("--min-trades", type=int, default=30)
     pm.add_argument("--min-sharpe", type=float, default=1.0)
     pm.add_argument("--max-dd", type=float, default=0.10)
+    pm.add_argument(
+        "--founder-mode",
+        action="store_true",
+        help="require distinct signer identities for red_team and risk_officer sign-offs",
+    )
     pm.add_argument("--format", default="text", choices=["text", "json"])
     pm.set_defaults(func=cmd_promote)
     args = p.parse_args()

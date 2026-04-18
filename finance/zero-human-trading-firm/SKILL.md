@@ -1,6 +1,6 @@
 ---
 name: "zero-human-trading-firm"
-description: Build an autonomous multi-agent trading firm that researches ideas, backtests strategies, enforces risk limits, promotes paper-traded strategies to live, and logs every trade for accounting. Use when setting up an AI-run quant team, orchestrating research/backtest/risk/execution agents, mapping trading roles to existing skills in this library, or enforcing hard-coded risk constraints that an LLM cannot circumvent. Mentions zero-human firm, AI trading firm, autonomous trading, quant agent team, Paperclip org pattern, trading agent orchestration, paper-to-live promotion.
+description: Build an autonomous multi-agent trading firm that researches ideas, backtests strategies, enforces risk limits, promotes paper-traded strategies to live, and logs every trade for accounting. Ships two modes — founder-approver (you sign every promotion) and founder-investor (agents run autonomously, you only approve budget + risk-policy changes). Use when setting up an AI-run quant team, orchestrating research/backtest/risk/execution agents, mapping trading roles to existing skills in this library, deploying to Paperclip on a VPS, or enforcing hard-coded risk constraints that an LLM cannot circumvent. Mentions zero-human firm, AI trading firm, autonomous trading, quant agent team, Paperclip deployment, trading agent orchestration, paper-to-live promotion, founder mode, capital allocation tranches, monthly founder report.
 ---
 
 # Zero-Human Trading Firm
@@ -18,42 +18,51 @@ Four non-negotiable principles:
 3. **Taste is the product.** Agents can generate infinite strategies. Only your judgment shapes which ones are good. Write your taste down — in instructions, skill references, and reviewer rubrics — or watch the firm drift.
 4. **Paper before live, always.** No strategy touches real capital until it passes paper-trading gates: min trades, positive Sharpe floor, max drawdown cap, and a red-team sign-off.
 
-## Org Chart (v1 — six roles)
+## Two modes
+
+This skill ships **two** operating modes. Pick one based on how much time you want to spend:
+
+- **Founder-Approver mode** *(default for v1 — recommended for first firm)*: you sign every paper→live promotion. Slower cadence, safer. ~15 min/day.
+- **Founder-Investor mode** *(v2 — the "only budget decisions" mode)*: two *distinct* agents (Red Team + Risk Officer) sign paper→live. You only approve capital tranches, withdrawals, and risk policy changes. ~10 min/month plus kill-switch pages. See [PAPERCLIP.md](PAPERCLIP.md) for the autonomous deployment.
+
+## Org Chart (9 roles — use all in founder-investor mode)
 
 ```
-            You (Board)
-                │
-             CEO (strategy + hiring)
-                │
-    ┌───────────┼───────────────────────────┐
-    │           │                           │
-  CTO       Risk Officer               Accounting
-    │           │                           │
- ┌──┴──┐     enforces hard              audit log,
- │     │     constraints,               P&L, tax
-Research Engineer                       exports
- │     │
- │   Backtest Engineer ── Red Team (adversarial)
- │                          │
- │                    Execution Engineer ── (paper → live gate)
+              Founder (You)    ← only approves budget + risk-policy changes
+                  │
+                 CEO ──────────────── Report Reviewer (self-eval on CEO reports)
+                  │
+    ┌─────────────┼──────────────────────────────┐
+    │             │                              │
+  CTO       Risk Officer                   Accountant
+    │             │                              │
+ ┌──┴──┐     enforces hard                   audit log,
+ │     │     constraints                    P&L, tax, founder report
+Research Engineer                                  │
+ │     │                                   (reviewed by self-eval)
+ │   Backtest Engineer ── Red Team
+ │                           │
+ │                  Execution Engineer ── (paper → live gate, dual-sign)
  │
 Strategy Researcher
 ```
 
-**Six starting roles:**
+**Role → existing skill mapping** (wire these in Paperclip via the Skills Manager):
 
-| Role | Primary Job | Maps To (existing skill / agent) |
-|------|-------------|----------------------------------|
-| **CEO** | Hire, fire, set priorities, read daily reports | `agents/c-level/cs-ceo-advisor.md` |
-| **CTO / Research Engineer** | Pick backtest library, data sources, infra | `agents/c-level/cs-cto-advisor.md` + `engineering-team/senior-data-engineer/` |
-| **Strategy Researcher** | Read archive, YouTube transcripts, forums; propose ideas | `engineering/autoresearch-agent/` + `engineering-team/senior-data-scientist/` |
-| **Backtest Engineer** | Implement & validate strategies; enforce hygiene | `engineering-team/senior-data-scientist/` + `engineering-team/tdd-guide/` |
-| **Red Team** | Break every strategy before risk signs off | `engineering-team/red-team/` + `engineering-team/adversarial-reviewer/` |
-| **Risk Officer** | Own hard constraints; approve paper→live promotions | `finance/financial-analyst/` + `engineering-team/incident-commander/` |
-| **Execution Engineer** | Order routing, slippage tracking, fail-safes | `engineering/ci-cd-pipeline-builder/` pattern (deploy discipline) |
-| **Accountant** | Daily P&L, tax lots, exportable ledger | `finance/financial-analyst/` + `finance/saas-metrics-coach/` pattern |
+| Role | Primary Job | Attach these existing skills |
+|------|-------------|------------------------------|
+| **Founder (you)** | Approve budget, risk-policy changes, withdrawals | `agents/personas/finance-lead.md` + `finance/business-investment-advisor/SKILL.md` |
+| **CEO** | Hire, fire, set priorities, read daily reports, escalate capital requests | `agents/c-level/cs-ceo-advisor.md` + this skill |
+| **CTO / Research Engineer** | Pick backtest library, data sources, infra | `agents/c-level/cs-cto-advisor.md` + `engineering-team/senior-data-engineer/SKILL.md` + `engineering/database-designer/SKILL.md` + `engineering-team/tdd-guide/SKILL.md` |
+| **Strategy Researcher** | Read archive, YouTube transcripts, forums; propose ideas | `engineering/autoresearch-agent/SKILL.md` + `engineering-team/senior-data-scientist/SKILL.md` |
+| **Backtest Engineer** | Implement & validate strategies; enforce hygiene | `engineering-team/senior-data-scientist/SKILL.md` + `engineering-team/tdd-guide/SKILL.md` + this skill |
+| **Red Team** | Break every strategy before risk signs off *(distinct identity from Risk Officer)* | `engineering-team/red-team/SKILL.md` + `engineering-team/adversarial-reviewer/SKILL.md` |
+| **Risk Officer** | Own hard constraints, sign paper→live | `finance/financial-analyst/SKILL.md` + `engineering-team/incident-commander/SKILL.md` |
+| **Execution Engineer** | Order routing, slippage tracking, fail-safes | `engineering-team/senior-backend/SKILL.md` + `engineering/ci-cd-pipeline-builder/SKILL.md` |
+| **Accountant** | Daily P&L, tax lots, monthly founder report | `finance/financial-analyst/SKILL.md` + `finance/saas-metrics-coach/SKILL.md` |
+| **Report Reviewer** | Score CEO/Accountant reports for honesty (catch score inflation) | `engineering/self-eval/SKILL.md` + `engineering-team/adversarial-reviewer/SKILL.md` |
 
-The CEO, Risk Officer, and Accountant are **must-haves** from day one. Everything else you can merge into a single Research Engineer seat until the bottleneck makes you split.
+The CEO, Risk Officer, Accountant, and (in founder-investor mode) Report Reviewer are **must-haves**. Everything else you can merge into a single Research Engineer seat until the bottleneck makes you split.
 
 ## 5-Phase Workflow
 
@@ -82,8 +91,9 @@ The CEO, Risk Officer, and Accountant are **must-haves** from day one. Everythin
   - Paper Sharpe ≥ floor (default 1.0)
   - Paper max drawdown ≤ cap (default 10%)
   - Red Team signed off (ledger flag)
-  - Risk Officer approval (ledger flag, requires human or dual-agent signature)
-- Pass → `live` with capped size. Fail → back to Backtest.
+  - Risk Officer signed off (ledger flag)
+  - In `--founder-mode`: Red Team and Risk Officer sign-offs must come from **distinct agent identities** (enforced by execution_gate)
+- Pass → `live` with capped size (from `capital_allocator.py`). Fail → back to Backtest.
 
 ### Phase 5: Live Monitoring + Retirement
 - Every live strategy has a **kill switch**: rolling 30-day Sharpe < 0, or drawdown > 2× backtest max
@@ -165,12 +175,51 @@ python scripts/execution_gate.py promote --id STR-0001
 
 ### 6. Firm Scaffolder (`scripts/firm_init.py`)
 
-Scaffolds a new firm workspace: role instruction stubs, ledger file, risk policy, issue templates, and a `FIRM.md` with your chosen venue and constraints.
+Scaffolds a new firm workspace: role instruction stubs, strategy ledger, capital ledger, risk policy, issue templates, and a `FIRM.md` with your chosen venue and constraints.
 
 ```bash
 python scripts/firm_init.py --name "Lewis Ventures" --venue "bittensor" \
     --out ./my-firm
 ```
+
+### 7. Capital Allocator (`scripts/capital_allocator.py`) — founder mode
+
+The founder's ledger. Tranches you commit, per-strategy allocations inside those tranches, P&L, and withdrawals. Everyone (agents and you) reads the same source of truth about available capital.
+
+```bash
+# Founder commits a tranche
+python scripts/capital_allocator.py fund --amount 10000 --note "Q2 2026 initial"
+
+# CEO allocates inside the tranche
+python scripts/capital_allocator.py allocate --strategy STR-0042 --amount 3000 --per-strategy-cap 3000
+
+# Accountant records daily P&L
+python scripts/capital_allocator.py pnl --strategy STR-0042 --amount 150.50
+
+# Founder sweeps profit
+python scripts/capital_allocator.py withdraw --amount 2000 --note "Q2 profit sweep"
+
+python scripts/capital_allocator.py status
+```
+
+### 8. Founder Report (`scripts/founder_report.py`) — founder mode
+
+Generates the monthly markdown digest that lands in the founder's inbox. Top-of-page P&L, by-strategy ROI, retirements, promotions, and a "The decision" section recommending *one* action (fund, sweep, or stay).
+
+```bash
+python scripts/founder_report.py \
+    --capital capital_ledger.json \
+    --strategies strategy_ledger.json \
+    --firm-name "Lewis Ventures" \
+    --month 2026-04 \
+    --out daily_reports/founder-2026-04.md
+```
+
+Attach `engineering/self-eval/SKILL.md` as a **reviewer** on this routine so a second agent scores the report before it reaches you. Catches score inflation in the CEO's self-assessment.
+
+## Paperclip deployment
+
+If you're running this autonomously on a VPS in founder-investor mode, see [PAPERCLIP.md](PAPERCLIP.md) for an end-to-end deployment guide: installing Paperclip, importing the org chart, attaching recommended skills per role, wiring the out-of-band risk service (the non-negotiable boundary), and setting up the monthly founder-report routine.
 
 ## Reference Library
 
