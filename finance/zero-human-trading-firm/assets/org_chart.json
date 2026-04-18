@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "description": "Importable org structure for agent orchestration frameworks (Paperclip, Claude Code sub-agents, Codex, OpenClaw, Hermes, Gemini CLI). Start with these 8 roles; split further only when a clear bottleneck appears.",
+  "firm_defaults": {
+    "start_role_count": 8,
+    "max_concurrent_agents": 3,
+    "reviewer_approver_required_for": ["backtest", "paper_to_live", "risk_policy_change"]
+  },
+  "roles": [
+    {
+      "key": "ceo",
+      "title": "CEO",
+      "reports_to": "board",
+      "responsibility": "Hires, fires, sets priorities, reads daily reports, signs paper->live promotions.",
+      "recommended_harness": ["claude-code", "codex"],
+      "recommended_skills": ["agents/c-level/cs-ceo-advisor.md"],
+      "instruction_must_include": ["what good looks like", "firm risk appetite", "quarterly priorities"]
+    },
+    {
+      "key": "cto_research_engineer",
+      "title": "CTO / Research Engineer",
+      "reports_to": "ceo",
+      "responsibility": "Picks backtest library, data sources, infrastructure. Owns data pipeline reproducibility.",
+      "recommended_harness": ["claude-code", "codex"],
+      "recommended_skills": [
+        "agents/c-level/cs-cto-advisor.md",
+        "engineering-team/senior-data-engineer/SKILL.md",
+        "engineering/database-designer/SKILL.md"
+      ]
+    },
+    {
+      "key": "strategy_researcher",
+      "title": "Strategy Researcher",
+      "reports_to": "cto_research_engineer",
+      "responsibility": "Reads papers, transcripts, forums. Proposes strategies. Files specs.",
+      "recommended_skills": [
+        "engineering/autoresearch-agent/SKILL.md",
+        "engineering-team/senior-data-scientist/SKILL.md"
+      ]
+    },
+    {
+      "key": "backtest_engineer",
+      "title": "Backtest Engineer",
+      "reports_to": "cto_research_engineer",
+      "responsibility": "Implements strategies. Enforces backtest hygiene. Produces reproducible metrics.",
+      "recommended_skills": [
+        "engineering-team/senior-data-scientist/SKILL.md",
+        "engineering-team/tdd-guide/SKILL.md",
+        "finance/zero-human-trading-firm/SKILL.md"
+      ]
+    },
+    {
+      "key": "red_team",
+      "title": "Red Team",
+      "reports_to": "cto_research_engineer",
+      "responsibility": "Breaks every strategy before risk signs off. Follows the 14-item playbook.",
+      "recommended_skills": [
+        "engineering-team/red-team/SKILL.md",
+        "engineering-team/adversarial-reviewer/SKILL.md"
+      ],
+      "instruction_must_include": ["be mean; find reasons to reject"]
+    },
+    {
+      "key": "risk_officer",
+      "title": "Risk Officer",
+      "reports_to": "ceo",
+      "responsibility": "Owns hard constraints. Signs off paper->live. Triggers circuit breakers.",
+      "recommended_skills": [
+        "finance/financial-analyst/SKILL.md",
+        "engineering-team/incident-commander/SKILL.md"
+      ],
+      "cannot": ["deploy risk_policy_enforcer.py", "edit risk_policy.json"]
+    },
+    {
+      "key": "execution_engineer",
+      "title": "Execution Engineer",
+      "reports_to": "cto_research_engineer",
+      "responsibility": "Order routing, slippage tracking, fail-safes, venue adapters.",
+      "cannot": ["own risk limits", "write to venue whitelist"]
+    },
+    {
+      "key": "accountant",
+      "title": "Accountant",
+      "reports_to": "ceo",
+      "responsibility": "Immutable daily P&L, tax lots, exportable ledger, weekly reconciliation.",
+      "recommended_skills": [
+        "finance/financial-analyst/SKILL.md",
+        "finance/saas-metrics-coach/SKILL.md"
+      ]
+    }
+  ],
+  "routines": [
+    {
+      "key": "nightly_research",
+      "who": "strategy_researcher",
+      "cadence": "daily 00:00 UTC",
+      "output": "daily_reports/YYYY-MM-DD.md"
+    },
+    {
+      "key": "backtest_queue",
+      "who": "backtest_engineer",
+      "cadence": "daily 06:00 UTC",
+      "input": "strategies where state=proposed",
+      "output": "strategies advanced to backtested with metrics"
+    },
+    {
+      "key": "red_team_window",
+      "who": "red_team",
+      "cadence": "daily 12:00 UTC",
+      "input": "strategies where state=backtested",
+      "output": "postmortems/redteam/STR-NNNN.md"
+    },
+    {
+      "key": "daily_pnl",
+      "who": "accountant",
+      "cadence": "daily 18:00 UTC",
+      "output": "daily_reports/pnl-YYYY-MM-DD.md"
+    },
+    {
+      "key": "weekly_review",
+      "who": "ceo",
+      "cadence": "weekly Sunday 20:00 UTC",
+      "attendees": ["ceo", "risk_officer", "cto_research_engineer"],
+      "output": "weekly review note + any retirement decisions"
+    }
+  ]
+}
