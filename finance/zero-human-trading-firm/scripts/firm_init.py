@@ -20,14 +20,15 @@ from pathlib import Path
 
 
 ROLES = [
-    ("ceo", "CEO", "Hires and fires. Sets quarterly priorities. Reads daily research and P&L reports. Approves every paper->live promotion."),
+    ("ceo", "CEO", "Hires and fires. Sets quarterly priorities. Reads daily research and P&L reports. Escalates capital requests to the founder."),
     ("research_engineer", "Research Engineer", "Picks backtest library, data sources, infrastructure. Owns data pipeline. Keeps research reproducible."),
     ("strategy_researcher", "Strategy Researcher", "Reads papers, transcripts, forums, GitHub. Proposes strategies with hypothesis + source + expected edge."),
     ("backtest_engineer", "Backtest Engineer", "Implements proposed strategies. Enforces hygiene: no lookahead, OOS split, walk-forward, realistic fees and slippage."),
-    ("red_team", "Red Team", "Breaks every strategy before risk signs off. Hunts for overfit, survivorship, regime dependence, dataset artifacts."),
-    ("risk_officer", "Risk Officer", "Owns hard constraints. Signs off (or not) on paper->live. Triggers circuit breaker on drawdown."),
+    ("red_team", "Red Team", "Breaks every strategy before risk signs off. Hunts for overfit, survivorship, regime dependence, dataset artifacts. Distinct identity from risk_officer."),
+    ("risk_officer", "Risk Officer", "Owns hard constraints. Signs off (or not) on paper->live. Triggers circuit breaker on drawdown. Distinct identity from red_team."),
     ("execution_engineer", "Execution Engineer", "Order routing, slippage tracking, fail-safes. Never owns risk limits."),
-    ("accountant", "Accountant", "Immutable daily P&L, tax lots, exportable ledger. Weekly reconciliation."),
+    ("accountant", "Accountant", "Immutable daily P&L, tax lots, exportable ledger. Weekly reconciliation. Drafts the monthly founder report."),
+    ("report_reviewer", "Report Reviewer (self-eval)", "Reviews the monthly founder report for honesty. Catches score inflation before it reaches the founder."),
 ]
 
 
@@ -54,12 +55,16 @@ ROLE_INSTRUCTION_TEMPLATE = """# {title}
 
 
 RISK_POLICY_DEFAULT = {
-    "description": "Default conservative policy. Edit before going live.",
-    "max_position_pct": 0.10,
-    "max_gross_exposure": 1.5,
-    "max_net_exposure": 1.0,
-    "max_leverage": 2.0,
-    "max_daily_drawdown": 0.05,
+    "description": "Founder-mode conservative policy. Edit before going live.",
+    "mode": "founder_autonomous",
+    "max_position_pct": 0.05,
+    "max_gross_exposure": 1.0,
+    "max_net_exposure": 0.75,
+    "max_leverage": 1.0,
+    "max_daily_drawdown": 0.03,
+    "max_weekly_drawdown": 0.06,
+    "max_monthly_drawdown": 0.10,
+    "firm_kill_switch_monthly_pct": 0.15,
     "per_asset_caps": {},
     "venue_whitelist": [],
 }
@@ -145,12 +150,24 @@ def scaffold(name: str, venue: str, out: Path) -> None:
         json.dumps({"version": 1, "strategies": [], "events": []}, indent=2),
     )
     write(
+        out / "capital_ledger.json",
+        json.dumps({
+            "version": 1,
+            "base_currency": "USD",
+            "tranches": [],
+            "allocations": [],
+            "pnl_events": [],
+            "withdrawals": [],
+        }, indent=2),
+    )
+    write(
         out / "org_chart.json",
         json.dumps(ORG_CHART, indent=2),
     )
     (out / "daily_reports").mkdir(exist_ok=True)
     (out / "research").mkdir(exist_ok=True)
     (out / "postmortems").mkdir(exist_ok=True)
+    (out / "postmortems" / "redteam").mkdir(exist_ok=True)
 
 
 def main() -> int:

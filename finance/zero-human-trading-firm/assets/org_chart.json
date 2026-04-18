@@ -1,20 +1,62 @@
 {
-  "version": 1,
-  "description": "Importable org structure for agent orchestration frameworks (Paperclip, Claude Code sub-agents, Codex, OpenClaw, Hermes, Gemini CLI). Start with these 8 roles; split further only when a clear bottleneck appears.",
+  "version": 2,
+  "description": "Importable org structure for Paperclip (and compatible agent frameworks). Founder mode: only the founder approves budget decisions; everything else is agent-to-agent with dual-agent sign-offs on promotions.",
+  "mode": "founder_autonomous",
   "firm_defaults": {
     "start_role_count": 8,
     "max_concurrent_agents": 3,
-    "reviewer_approver_required_for": ["backtest", "paper_to_live", "risk_policy_change"]
+    "reviewer_approver_required_for": [
+      "new_strategy_proposal",
+      "backtest_result",
+      "paper_to_live_promotion",
+      "new_capital_tranche",
+      "withdrawal",
+      "risk_policy_change",
+      "firm_kill_switch"
+    ],
+    "founder_approves_only": [
+      "new_capital_tranche",
+      "withdrawal",
+      "risk_policy_change"
+    ],
+    "dual_agent_signoff_required_for": [
+      "paper_to_live_promotion"
+    ],
+    "dual_agent_signoff_rule": "red_team and risk_officer must be distinct agent identities (enforced by execution_gate.py --founder-mode)"
+  },
+  "founder": {
+    "role": "You — Board / Investor",
+    "attach_skills": [
+      "agents/personas/finance-lead.md",
+      "finance/business-investment-advisor/SKILL.md"
+    ],
+    "notifications": {
+      "subscribe": ["monthly_founder_report", "firm_kill_switch", "capital_tranche_request"],
+      "mute": ["daily_pnl", "backtest_results", "research_digest", "red_team_notes"]
+    },
+    "monthly_workflow": [
+      "read founder report (1st of month, 10 min)",
+      "decide: fund new tranche / sweep profit / stay the course",
+      "do nothing else"
+    ]
   },
   "roles": [
     {
       "key": "ceo",
       "title": "CEO",
-      "reports_to": "board",
-      "responsibility": "Hires, fires, sets priorities, reads daily reports, signs paper->live promotions.",
-      "recommended_harness": ["claude-code", "codex"],
-      "recommended_skills": ["agents/c-level/cs-ceo-advisor.md"],
-      "instruction_must_include": ["what good looks like", "firm risk appetite", "quarterly priorities"]
+      "reports_to": "founder",
+      "responsibility": "Hires, fires, sets priorities, reads daily reports, escalates capital requests to founder.",
+      "recommended_harness": ["claude-code"],
+      "recommended_skills": [
+        "agents/c-level/cs-ceo-advisor.md",
+        "finance/zero-human-trading-firm/SKILL.md"
+      ],
+      "instruction_must_include": [
+        "what good looks like",
+        "firm risk appetite",
+        "quarterly priorities",
+        "escalation criteria for founder"
+      ]
     },
     {
       "key": "cto_research_engineer",
@@ -25,7 +67,8 @@
       "recommended_skills": [
         "agents/c-level/cs-cto-advisor.md",
         "engineering-team/senior-data-engineer/SKILL.md",
-        "engineering/database-designer/SKILL.md"
+        "engineering/database-designer/SKILL.md",
+        "engineering-team/tdd-guide/SKILL.md"
       ]
     },
     {
@@ -53,40 +96,68 @@
       "key": "red_team",
       "title": "Red Team",
       "reports_to": "cto_research_engineer",
+      "recommended_harness": ["codex"],
       "responsibility": "Breaks every strategy before risk signs off. Follows the 14-item playbook.",
       "recommended_skills": [
         "engineering-team/red-team/SKILL.md",
         "engineering-team/adversarial-reviewer/SKILL.md"
       ],
-      "instruction_must_include": ["be mean; find reasons to reject"]
+      "instruction_must_include": [
+        "be mean; find reasons to reject",
+        "never sign the risk_officer flag — that belongs to a different identity"
+      ]
     },
     {
       "key": "risk_officer",
       "title": "Risk Officer",
       "reports_to": "ceo",
+      "recommended_harness": ["claude-code"],
       "responsibility": "Owns hard constraints. Signs off paper->live. Triggers circuit breakers.",
       "recommended_skills": [
         "finance/financial-analyst/SKILL.md",
         "engineering-team/incident-commander/SKILL.md"
       ],
-      "cannot": ["deploy risk_policy_enforcer.py", "edit risk_policy.json"]
+      "cannot": [
+        "deploy risk_policy_enforcer.py",
+        "edit risk_policy.json",
+        "sign the red_team_signed_off flag (distinct-signer rule)"
+      ]
     },
     {
       "key": "execution_engineer",
       "title": "Execution Engineer",
       "reports_to": "cto_research_engineer",
-      "responsibility": "Order routing, slippage tracking, fail-safes, venue adapters.",
-      "cannot": ["own risk limits", "write to venue whitelist"]
+      "responsibility": "Order routing, slippage tracking, fail-safes, venue adapters. Every order first passes the risk service.",
+      "recommended_skills": [
+        "engineering-team/senior-backend/SKILL.md",
+        "engineering/ci-cd-pipeline-builder/SKILL.md"
+      ],
+      "cannot": [
+        "own risk limits",
+        "write to venue whitelist",
+        "deploy risk service"
+      ]
     },
     {
       "key": "accountant",
       "title": "Accountant",
       "reports_to": "ceo",
-      "responsibility": "Immutable daily P&L, tax lots, exportable ledger, weekly reconciliation.",
+      "responsibility": "Immutable daily P&L, tax lots, exportable ledger, weekly reconciliation, monthly founder report draft.",
       "recommended_skills": [
         "finance/financial-analyst/SKILL.md",
         "finance/saas-metrics-coach/SKILL.md"
       ]
+    },
+    {
+      "key": "report_reviewer",
+      "title": "Report Reviewer (self-eval)",
+      "reports_to": "ceo",
+      "responsibility": "Reviewer role that scores the monthly founder report for honesty and catches score inflation before it reaches the founder.",
+      "recommended_skills": [
+        "engineering/self-eval/SKILL.md",
+        "engineering-team/adversarial-reviewer/SKILL.md"
+      ],
+      "attach_as_reviewer_on": ["monthly_founder_report", "weekly_ceo_note"]
     }
   ],
   "routines": [
@@ -121,7 +192,15 @@
       "who": "ceo",
       "cadence": "weekly Sunday 20:00 UTC",
       "attendees": ["ceo", "risk_officer", "cto_research_engineer"],
-      "output": "weekly review note + any retirement decisions"
+      "output": "weekly review note"
+    },
+    {
+      "key": "monthly_founder_report",
+      "who": "ceo",
+      "reviewer": "report_reviewer",
+      "cadence": "monthly 1st 09:00 UTC",
+      "output": "daily_reports/founder-YYYY-MM.md",
+      "notify": "founder"
     }
   ]
 }
