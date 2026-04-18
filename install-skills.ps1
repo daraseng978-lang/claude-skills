@@ -2,7 +2,7 @@
 # Usage: .\install-skills.ps1
 
 $sourceDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$skillsDir = Join-Path $env:USERPROFILE ".claude" "skills"
+$skillsDir = Join-Path (Join-Path $env:USERPROFILE ".claude") "skills"
 
 # Create skills directory if it doesn't exist
 if (-not (Test-Path $skillsDir)) {
