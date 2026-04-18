@@ -7,7 +7,7 @@ What the founder provides before pasting:
 - `<RISK_HOST_URL>` — reachable from the VPS, e.g. `https://risk.internal:8443`
 - `<RISK_HOST_TOKEN>` — bearer token the agents use to call the risk service
 - `<BROKERAGE>` — e.g. `alpaca-paper`, `hyperliquid-testnet`, `ib-paper`
-- `<BROKERAGE_KEY>` / `<BROKERAGE_SECRET>` — paper-trading credentials only
+- `<BROKERAGE_KEY>` / `<BROKERAGE_SECRET>` — paper-trading credentials only (for IB this is the paper account ID + IB Gateway socket, see Interactive Brokers section below)
 - `<FIRM_NAME>` — e.g. "Lewis Ventures"
 - `<VENUE>` — e.g. `bittensor`, `crypto-spot`, `equities-us`
 - `<SKILLS_REPO_PATH>` — path to this repo on the VPS, e.g. `/opt/claude-skills`
@@ -68,6 +68,21 @@ Everything else is yours. Write it up in the weekly note instead.
 ### When in doubt
 
 Re-read `SKILL.md`. If still unsure, draft the question as if for the founder — usually the answer becomes obvious while writing. If not, ship the question.
+
+### Interactive Brokers specifics (when `<BROKERAGE>` = `ib-paper` or `ib-live`)
+
+Use this section verbatim if the founder is on IB.
+
+1. **Run IB Gateway, not TWS.** Headless, low-memory, restarts cleanly. Install on `<VPS_HOST>` (or a dedicated execution box). Never run a desktop GUI in production.
+2. **Ports.** Paper = `4002`, live = `4001`. Default to paper. Never bind to a public IP — bind `127.0.0.1` only and reach it from in-process.
+3. **API library.** Use `ib_async` (the maintained successor to `ib_insync`). Pin a version in `requirements.txt`. Do NOT use the raw `ibapi` package unless you need a feature `ib_async` lacks.
+4. **Daily restart.** IB Gateway logs out once per day for maintenance. Install **IBC** (free, open-source) to auto-restart it. Ask the founder to set 2FA to "IBKR Mobile" so IBC can re-auth without a phone tap.
+5. **Account ID, not API keys.** IB does not issue API keys. Authentication = your IB username/password + 2FA + the Gateway running. Treat the Gateway socket as the credential.
+6. **Market data subscriptions cost money.** Before subscribing to any new data feed, file a `risk_policy_change`-style request to the founder with the monthly cost. Default allowed: whatever the founder's current subscriptions cover. Ask before adding more.
+7. **Order routing.** Use SMART routing unless the strategy requires a specific venue. Always set `outsideRth=False` unless the strategy is explicitly an after-hours strategy.
+8. **Pacing limits.** IB throttles at ~50 messages/sec. Cap the Execution Engineer at 10 orders/sec to leave headroom for cancels and market-data requests.
+9. **Reconciliation.** Every night the Accountant reconciles position + cash from the IB account against the internal `capital_ledger.json`. Any drift > $1 is an immediate page to the founder.
+10. **Live promotion.** Never submit an order with `whatIf=False` until the founder has explicitly approved paper→live for that strategy AND the distinct-signer rule is satisfied.
 
 ---
 
