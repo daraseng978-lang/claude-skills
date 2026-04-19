@@ -23,7 +23,7 @@ Four non-negotiable principles:
 This skill ships **two** operating modes. Pick one based on how much time you want to spend:
 
 - **Founder-Approver mode** *(default for v1 — recommended for first firm)*: you sign every paper→live promotion. Slower cadence, safer. ~15 min/day.
-- **Founder-Investor mode** *(v2 — the "only budget decisions" mode)*: two *distinct* agents (Red Team + Risk Officer) sign paper→live. You only approve capital tranches, withdrawals, and risk policy changes. ~10 min/month plus kill-switch pages. See [PAPERCLIP.md](PAPERCLIP.md) for the autonomous deployment.
+- **Founder-Investor mode** *(v2 — the "only budget decisions" mode)*: two *distinct* agents (Red Team + Risk Officer) sign paper→live. You only approve capital tranches, withdrawals, and risk policy changes. **Honest time commitment: ~30 min/week for the first 90 days (reading weekly notes, tightening role instructions), then ~15 min/month thereafter.** Plus kill-switch pages, which are rare but real. Anyone selling you "10 min/month from day one" on an AI trading firm is lying. See [PAPERCLIP.md](PAPERCLIP.md) for the autonomous deployment.
 
 ## Org Chart (9 roles — use all in founder-investor mode)
 

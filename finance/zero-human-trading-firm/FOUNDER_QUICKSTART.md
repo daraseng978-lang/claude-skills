@@ -2,7 +2,12 @@
 
 **Plain-English setup for non-technical founders.** Follow these steps in order. Nothing here costs more than ~$30/mo or risks real money until you explicitly approve it.
 
-Expected time: **~90 minutes** spread over a day. You can pause at any numbered step.
+**Honest time commitment:**
+- **Setup:** ~90 minutes spread over a day (the steps below). You can pause at any numbered step.
+- **First 90 days:** ~30 min/week reading the Sunday CEO note and tightening role instructions.
+- **After 90 days:** ~15 min/month reading the founder report and approving/declining the one recommended action.
+
+If anyone (including me) sells you "10 min/month from day one," they're selling a fantasy. A fresh AI trading firm needs babysitting until its taste is trained.
 
 ---
 
@@ -84,25 +89,11 @@ Write down your **paper account ID** (starts with `DU`, e.g. `DU1234567`).
 
 ---
 
-## Step 4 — Install IB Gateway on the VPS (~10 min)
+## Step 4 — Skip this step
 
-Back on the main VPS (SSH as the `agent` user this time):
+The CEO agent installs IB Gateway + IBC for you in Step 5. If you tried to do it yourself you'd land in a GUI/VNC rabbit hole that isn't worth the hour. Keep moving.
 
-```
-ssh root@<VPS_IP>
-su - agent
-```
-
-Download IB Gateway (the founder picks "offline stable" from IB's download page). Run it once with the GUI (if your VPS doesn't have a desktop, use `x11vnc` or run Gateway on your laptop temporarily to verify login works, then move the config to the VPS).
-
-Install **IBC** so Gateway restarts itself daily:
-
-```
-curl -L -o /tmp/ibc.zip https://github.com/IbcAlpha/IBC/releases/latest/download/IBCLinux.zip
-unzip /tmp/ibc.zip -d ~/ibc
-```
-
-Tell the CEO agent to finish IBC configuration for you — it's fiddly and the CEO has the `engineering/ci-cd-pipeline-builder` skill attached for exactly this.
+(You'll hand the CEO your IB paper account ID and your IB login password, one-time, through Paperclip's Secret Manager — never in chat, never in a role instruction file. The agent has the `engineering/ci-cd-pipeline-builder` skill attached for exactly this.)
 
 ---
 
@@ -163,11 +154,48 @@ If any of the three fails, say no. No pressure — the firm keeps running on pap
 
 ## Escape hatches
 
-**Something feels wrong.** In Paperclip chat, tell the CEO: "halt all trading". It flattens positions and stops.
+In order of escalation. If level 1 doesn't work, go to level 2. If level 2 doesn't work, go to level 3. Don't panic — these exist because the CEO agent WILL hallucinate eventually and you need to know you can always win.
 
-**You get a kill-switch page.** Open Paperclip on your phone. Confirm trading is halted. Decide: reset the switch, or wind down.
+**Level 1 — Tell the CEO in chat.** "Halt all trading." It flattens positions and stops. Works when the CEO agent is responsive.
 
-**You want out.** Shut down both VMs from the provider dashboards. You lose ~$25 and nothing else, because you stayed in paper.
+**Level 2 — Stop Paperclip from the command line.** On your laptop:
+```
+ssh agent@<VPS_IP> 'sudo systemctl stop paperclip'
+```
+This kills the agent orchestration. The risk service (on the other VM) is still up, but nobody's sending orders. Works when the CEO is hallucinating, looping, or ignoring you.
+
+**Level 3 — Manual liquidation in IB Client Portal.** If Paperclip is wedged AND you have live positions you want closed, do it yourself:
+1. Log in to IB Client Portal on your laptop
+2. Orders & Trades → cancel every open order
+3. Positions → right-click any position → Close Position → MKT order
+4. Verify Account Summary shows flat (zero positions, no open orders)
+
+Keep IB Client Portal bookmarked. You don't want to be searching for it at 2am.
+
+**Level 4 — Shut everything down.** Destroy both VMs from the provider dashboards. You lose ~$25 and nothing else, because you stayed in paper. You can rebuild from a fresh `install_vps.sh` + `install_risk_host.sh` anytime.
+
+---
+
+## What happens if you disappear for 2 weeks
+
+Weddings, vacations, broken wrists — you will eventually be unreachable. Defaults are set so the firm survives your absence without doing anything stupid.
+
+**In paper mode (first 30+ days — your likely state):**
+- The firm keeps paper trading. No risk to you.
+- Weekly notes and monthly reports queue up in Paperclip. Read them when you get back.
+- No paper→live promotions happen without your reply. The CEO will ask, wait 72 hours per the escalation rule, and then mark the request **declined** automatically. You won't come back to find a live strategy.
+
+**In live mode (if/when you get there):**
+- Live strategies keep trading within `risk_policy.json` limits.
+- The firm kill switch (`firm_kill_switch_monthly_pct`, default 15%) auto-flattens everything if monthly drawdown breaches it. No human required.
+- Any proposed risk-policy change auto-declines after 72 hours of silence.
+- Any new tranche / withdrawal request auto-declines after 72 hours of silence.
+
+**If your internet dies for a day:** nothing happens to your money. Paperclip is on the VPS, not your laptop. The agents keep running. You catch up when you're back online.
+
+**If your PagerDuty / phone push fails during a kill-switch event:** the kill switch still fires. Trading halts. You'll find out when you check the dashboard. Positions are flat; the worst case is lost opportunity, not lost capital.
+
+**Set up before you go:** put the VPS IP, risk host IP, and IB account ID in your password manager. Tell one trusted person how to run Level 2 and Level 3. That's the only "second pair of eyes" you need.
 
 ---
 
