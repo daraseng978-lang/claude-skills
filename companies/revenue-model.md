@@ -1,6 +1,6 @@
-# Revenue Model — AccessRemodel
+# Revenue Model — Directory Portfolio Co.
 
-_CFO memo. Assumptions stated explicitly. Updated at each budget gate._
+_CFO memo. Applies to each Phase 0 property individually; portfolio aggregation at bottom. Updated at each budget gate._
 
 ## 5 Revenue Streams
 
@@ -136,4 +136,36 @@ Rotate the niche if:
 
 ---
 
-_Next revision: Gate #3 post-mortem (day 90), informed by actual traffic + conversion data._
+## Portfolio Aggregation (5 Properties)
+
+Per-property assumptions above multiplied by hit-rate expectations. Base case = 40% of properties clear Day 90 kill criteria (2 keepers, 3 kills).
+
+### Portfolio revenue ranges by scenario
+
+| Scenario | Keepers | Year 1 revenue | Year 1 MRR at Dec |
+|---|---|---|---|
+| **🔴 Conservative** (1 keeper at low end) | 1 | $15–20K | $1.5–3K |
+| **🟡 Base case** (2 keepers at midpoint) | 2 | $35–60K | $5–10K |
+| **🟢 Upside** (3 keepers at midpoint) | 3 | $60–100K | $10–15K |
+| **🚀 Breakout** (4 keepers, one breakout at stretch) | 4 | $120–200K | $15–25K |
+
+### Per-property lead-value ranking (informs which to prioritize monetization on)
+
+| Property | $/lead | Monetization mix |
+|---|---|---|
+| DementiaCare | $500–2,000 | Lead sales >> everything else |
+| IVFCost | $100–400 | Lead sales + sponsored content |
+| WalkInTubPros | $75–500 + affiliate | Brand affiliate (Kohler, Safe Step) |
+| AccessRemodel | $50–200 | Paid listings + lead sales |
+| ADUBuilders | $50–250 | Paid listings + permit tool SaaS (Y2) |
+
+### Portfolio vs single-property EV
+
+- 1-property plan (original): EV = 50% × $35K = **$17.5K**
+- 5-property plan (revised): EV = 40% × 2.5 keepers × $35K = **$35K**
+
+**2× expected value at 3× budget, with diversification reducing variance.** The founder's push was mathematically correct.
+
+---
+
+_Next revision: Gate #3 post-mortem (day 90), informed by actual per-property traffic + conversion data._

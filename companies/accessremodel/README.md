@@ -1,32 +1,57 @@
-# AccessRemodel
+# AccessRemodel — ADA-Accessible Bathroom Contractors
 
-**Virtual AI-operated company.** Founder/Investor interacts only at budget gates.
+**Portfolio property #1.** Nationwide directory of contractors specializing in accessibility retrofits (grab bars, roll-in showers, walk-in tubs, ADA-compliant vanities).
 
-Portfolio directory business — Phase 0 property: **ADA-Accessible Bathroom Contractors**.
+## Status
 
-## Structure
-
-| File | Purpose |
+| | |
 |---|---|
-| `company-context.md` | Founder interview output (used by all agents) |
-| `niche-recommendation.md` | CEO + CPO memo with niche selection + rationale |
-| `execution-plan.md` | Phase 0 → Phase 1 roadmap with budget gates |
-| `budget-ledger.md` | Authorized spend + actuals |
-| `decisions.md` | Decision log (append-only) |
-| `pipeline/` | Scraping + enrichment scripts (Frey's 7-step process, codified) |
+| Domain | `accessremodel.co` ✅ purchased |
+| Vercel | project pending (Day 1 tomorrow) |
+| Resend | domain verified ✅ |
+| Outscraper | $100 allocated |
+| Launch target | Day 1–2 of Phase 0 (first property live) |
 
-## C-Suite Assignments (from `c-level-advisor/`)
+## Niche Thesis
 
-| Agent | Role |
+- **Decision-driver:** ADA compliance (binary, non-specialists can't fake it)
+- **TAM:** ~$2B US accessible bathroom remodel annual spend
+- **Tailwind:** ~10K Americans turn 65 daily; aging-in-place is #1 senior preference (AARP 77%)
+- **Lead value:** $50–200 (projects $5K–$50K, contractor CAC tolerance ~$200)
+- **AI-search resilience:** Specific compliance queries ("ADA bathroom contractor near me with roll-in shower") survive LLM aggregation
+
+## Filter Schema
+
+- Services: grab bars, roll-in shower, walk-in tub, curbless shower, accessible vanity, raised toilet, shower seat, non-slip flooring, stair lift, ramp install, widened doorways
+- CAPS certification (NAHB Certified Aging-in-Place Specialist)
+- Licensed & insured
+- Service radius (miles)
+- Free consultation offered
+
+## Files
+
+- `niche-recommendation.md` — original CEO/CPO memo justifying this niche
+- `site-config.md` — Next.js metadata, DNS records, schema.org, Resend lead route
+- (shared) `../pipeline/` — scrape + clean + verify + enrich scripts
+- (shared) `../company-context.md`, `../execution-plan.md`, `../budget-ledger.md`
+
+## Per-Property Budget
+
+| Line | $ |
 |---|---|
-| CEO | Portfolio strategy, capital allocation |
-| CPO | Niche selection, UX, decision-driver research |
-| CTO | Pipeline + site build |
-| CMO | Programmatic SEO, backlink strategy |
-| CRO | Lead-gen monetization, outbound to contractors |
-| CFO | Unit econ, reports budget asks to founder |
-| Chief of Staff | Orchestration, founder comms |
+| Outscraper | $100 |
+| Claude API credits | $50 |
+| Domain | $12 |
+| **Total** | **$162** |
 
-## Founder Interaction Rule
+## Launch Milestones
 
-Founder **only** touches the project at **budget gates**. All other decisions flow through Chief of Staff → relevant C-suite agent. See `execution-plan.md` for gate schedule.
+- [ ] Outscraper pull complete (~50K raw rows)
+- [ ] Cleaned to ~15K contractors
+- [ ] Verified ~800–1.5K ADA specialists
+- [ ] Enriched with services + certifications
+- [ ] Site deployed to Vercel
+- [ ] Google Search Console verified
+- [ ] First 3 inbound leads
+
+Kill criteria: <300 monthly visits AND $0 MRR at Day 90 → sunset domain, reallocate.
