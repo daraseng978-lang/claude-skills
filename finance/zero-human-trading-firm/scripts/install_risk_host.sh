@@ -63,21 +63,63 @@ if [[ ! -f /etc/risk_policy.json ]]; then
   chmod 644 /etc/risk_policy.json
 fi
 
-# FastAPI wrapper
+# pre-create HWM state file, root-owned, daemon will append updates via a helper
+if [[ ! -f /etc/hwm_state.json ]]; then
+  echo '{"version":1,"high_water_mark":0.0,"last_equity":0.0,"last_equity_ts":0,"net_deposits":0.0}' \
+    > /etc/hwm_state.json
+  chown risk:risk /etc/hwm_state.json  # the risk user (daemon) can update; nobody else
+  chmod 640 /etc/hwm_state.json
+fi
+
+# FastAPI wrapper — /risk/check + /hwm/equity + /hwm/deposit + /hwm/state
 cat > /opt/risk/risk_service.py <<'PYEOF'
-import json, os, subprocess, tempfile
+import json, os, subprocess, tempfile, threading
 from fastapi import FastAPI, HTTPException, Header
 
 app = FastAPI()
 POLICY = "/etc/risk_policy.json"
+HWM = "/etc/hwm_state.json"
 TOKEN = os.environ.get("RISK_TOKEN", "")
+_hwm_lock = threading.Lock()
+
+
+def _require_auth(authorization: str) -> None:
+    if not TOKEN or authorization != f"Bearer {TOKEN}":
+        raise HTTPException(status_code=401, detail="unauthorized")
+
+
+def _load_hwm() -> dict:
+    with open(HWM, "r") as f:
+        return json.load(f)
+
+
+def _save_hwm(state: dict) -> None:
+    tmp = HWM + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(state, f, indent=2, sort_keys=True)
+    os.replace(tmp, HWM)
+
+
+def _load_policy() -> dict:
+    with open(POLICY, "r") as f:
+        return json.load(f)
+
 
 @app.post("/risk/check")
 def check(payload: dict, authorization: str = Header(default="")):
-    if not TOKEN or authorization != f"Bearer {TOKEN}":
-        raise HTTPException(status_code=401, detail="unauthorized")
+    _require_auth(authorization)
     order = payload["order"]
     state = payload.get("state", {})
+
+    # Inject drawdown-from-HWM into the state before enforcement
+    with _hwm_lock:
+        hwm = _load_hwm()
+    last_equity = float(hwm.get("last_equity", 0.0))
+    high_water = float(hwm.get("high_water_mark", 0.0))
+    if high_water > 0:
+        dd = max(0.0, (high_water - last_equity) / high_water)
+        state.setdefault("drawdown_from_hwm", dd)
+
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as of, \
          tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as sf:
         json.dump(order, of); of.flush()
@@ -92,6 +134,70 @@ def check(payload: dict, authorization: str = Header(default="")):
     if rc.returncode != 0 and not rc.stdout:
         raise HTTPException(status_code=500, detail=rc.stderr)
     return json.loads(rc.stdout)
+
+
+@app.post("/hwm/equity")
+def hwm_equity(payload: dict, authorization: str = Header(default="")):
+    """Record a new equity snapshot. HWM updates only when equity
+    EXCLUDING deposits exceeds the previous peak.
+    """
+    _require_auth(authorization)
+    equity = float(payload["equity"])
+    ts = int(payload.get("ts", 0))
+    with _hwm_lock:
+        state = _load_hwm()
+        net_deposits = float(state.get("net_deposits", 0.0))
+        equity_ex_deposits = equity - net_deposits
+        prev_hwm = float(state.get("high_water_mark", 0.0))
+        if equity_ex_deposits > prev_hwm:
+            state["high_water_mark"] = equity_ex_deposits
+        state["last_equity"] = equity
+        state["last_equity_ts"] = ts
+        _save_hwm(state)
+        return {
+            "ok": True,
+            "high_water_mark": state["high_water_mark"],
+            "last_equity": state["last_equity"],
+            "drawdown_from_hwm": (
+                max(0.0, (state["high_water_mark"] - equity_ex_deposits) / state["high_water_mark"])
+                if state["high_water_mark"] > 0 else 0.0
+            ),
+        }
+
+
+@app.post("/hwm/deposit")
+def hwm_deposit(payload: dict, authorization: str = Header(default="")):
+    """Record a deposit or withdrawal so HWM denominator ignores it.
+    Positive = deposit, negative = withdrawal.
+    """
+    _require_auth(authorization)
+    amount = float(payload["amount"])
+    with _hwm_lock:
+        state = _load_hwm()
+        state["net_deposits"] = float(state.get("net_deposits", 0.0)) + amount
+        _save_hwm(state)
+        return {"ok": True, "net_deposits": state["net_deposits"]}
+
+
+@app.get("/hwm/state")
+def hwm_state(authorization: str = Header(default="")):
+    _require_auth(authorization)
+    with _hwm_lock:
+        state = _load_hwm()
+    high_water = float(state.get("high_water_mark", 0.0))
+    last_equity = float(state.get("last_equity", 0.0))
+    net_deposits = float(state.get("net_deposits", 0.0))
+    equity_ex_deposits = last_equity - net_deposits
+    dd = (max(0.0, (high_water - equity_ex_deposits) / high_water)
+          if high_water > 0 else 0.0)
+    return {
+        "high_water_mark": high_water,
+        "last_equity": last_equity,
+        "last_equity_ts": state.get("last_equity_ts", 0),
+        "net_deposits": net_deposits,
+        "drawdown_from_hwm": dd,
+    }
+
 
 @app.get("/health")
 def health():
@@ -128,6 +234,7 @@ RestartSec=5
 # prevent this service from writing anywhere except its own dir
 ProtectSystem=strict
 ReadOnlyPaths=/etc/risk_policy.json
+ReadWritePaths=/etc/hwm_state.json
 
 [Install]
 WantedBy=multi-user.target

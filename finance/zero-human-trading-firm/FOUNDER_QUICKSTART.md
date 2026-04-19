@@ -13,18 +13,40 @@ If anyone (including me) sells you "10 min/month from day one," they're selling 
 
 ## Before you start: shopping list
 
-Buy / sign up for these. You only do this once.
+Buy / sign up for these. You only do this once. **Pick one of two modes:**
+
+### Recommended mode — "Real founder mode" (~$150/mo floor)
+
+This is what a real quant firm costs. You get dual-harness agents, proper isolation, commercial data.
 
 | # | Thing | Where | Cost | Time |
 |---|-------|-------|------|------|
-| 1 | Main VPS (8 GB RAM, Ubuntu 22.04) | Hetzner, DigitalOcean, Linode — your choice | ~$20/mo | 5 min |
+| 1 | Main VPS (8 GB RAM, Ubuntu 22.04/24.04) | Hetzner, DigitalOcean, Linode, Vultr — pick one | ~$20/mo | 5 min |
 | 2 | Risk host VM (1 GB RAM, Ubuntu 22.04) | **Different account/provider from #1** | ~$5/mo | 5 min |
-| 3 | IB paper-trading account | alredy have this via your IB login | free | 2 min to enable API |
-| 4 | Claude Code subscription | claude.ai | $20/mo | 2 min |
+| 3 | IB paper-trading account | already included with your IB login | free | 2 min to enable API |
+| 4 | Claude Code Pro (CEO/CTO seats) | claude.ai | ~$100/mo | 2 min |
+| 5 | Codex subscription (for dual-harness sign-off on Red Team vs Risk Officer) | openai.com | ~$20/mo | 2 min |
+| 6 | Data feed (if your strategy needs realtime equity or crypto quotes beyond what IB gives you) | varies | $0–$200/mo | varies |
 
-**Why two different providers?** If one account is compromised, the attacker can't reach both. This is the single most important setup rule.
+**Realistic monthly floor: ~$150/mo before data feeds.** Anyone selling you a cheaper-than-$45/mo setup is selling a toy. Budget accordingly.
 
-After you finish the shopping list, you'll have **two IP addresses** (call them `<VPS_IP>` and `<RISK_IP>`) and **one IB paper account number** (looks like `DU1234567`).
+### Minimum-viable mode — "$35/mo bootstrap"
+
+If you want to learn the plumbing before committing $150/mo, this still preserves the risk isolation (same VM, different Unix user + read-only policy file) without renting a second machine. It is **less safe** than the recommended mode and you should migrate off it within 60 days.
+
+| # | Thing | Where | Cost | Time |
+|---|-------|-------|------|------|
+| 1 | One VPS (4 GB RAM, Ubuntu 22.04) | any | ~$15/mo | 5 min |
+| 2 | IB paper-trading account | already included | free | 2 min |
+| 3 | Claude Code Pro | claude.ai | $20/mo | 2 min |
+| 4 | Skip Codex for now — accept that Red Team and Risk Officer share one harness | — | $0 | — |
+| 5 | Run risk service as a systemd unit under a different Unix user on the same VPS, policy file owned by root | — | $0 | (CEO agent handles it) |
+
+**Tradeoffs in MVP mode:** if the agent user on the VPS is ever compromised, the attacker could also attack the risk process (same kernel, same box). This is NOT acceptable for live trading, only for learning on paper. The CEO agent's first-week checklist will warn you to upgrade before promotion.
+
+**Why the two-provider rule matters** (recommended mode): if one cloud account is compromised, the attacker can't reach both. This is the single most important setup rule.
+
+After you finish the shopping list, you'll have **two IP addresses** (call them `<VPS_IP>` and `<RISK_IP>`; in MVP mode they're the same) and **one IB paper account number** (looks like `DU1234567`).
 
 ---
 
@@ -139,9 +161,37 @@ On the 1st of each month, Paperclip drops a **founder report** in your inbox. On
 
 | Report says | You do |
 |-------------|--------|
-| "Fund another tranche" | SSH in, run `python3 capital_allocator.py fund --amount X --note "..."` |
-| "Sweep profit" | SSH in, run `python3 capital_allocator.py withdraw --amount X --note "..."` |
+| "Fund another tranche" | Approve the signed action the CEO proposed (see below). |
+| "Sweep profit" | Approve the signed action the CEO proposed (see below). |
 | "Stay the course" | Nothing. |
+
+**The signed-action workflow (capital moves have an audit trail):**
+
+Capital movement never happens at a shell prompt with free-form arguments — that's how firms lose money to fat fingers. Every fund/withdraw goes through a **signed action artifact** committed to your private `firm-actions` git repo. The workflow:
+
+1. CEO proposes:
+   ```
+   python3 capital_action.py propose --action fund --amount 10000 \
+     --reason "month 2 budget per founder report"
+   ```
+   This writes `actions/pending/A-YYYY-MM-DD-HHMMSS-fund.json`.
+2. You review the JSON file. If it matches what you wanted:
+   ```
+   python3 capital_action.py approve --file actions/pending/A-...-fund.json
+   git add actions/approved/A-...-fund.json
+   git commit -sS -m "approve A-...-fund: +10000"
+   ```
+   The `-s -S` flags sign the commit with your GPG key. That commit is the audit trail.
+3. CEO (or you) applies the approved action:
+   ```
+   python3 capital_allocator.py fund --amount 10000 \
+     --action-file actions/approved/A-...-fund.json
+   ```
+   The allocator verifies the file exists, is approved, and amount matches, then commits the tranche to `capital_ledger.json` with the `action_id` linked.
+
+If you accidentally typo `--amount 20000` into the allocator but the approved action says `10000`, the allocator rejects it. This is the point.
+
+In break-glass emergencies (the CEO is compromised, kill switch fired, manual positions), the allocator still accepts unsigned fund/withdraw if `require_signed_actions: false` in the ledger. Flip that to `true` in the ledger once your first signed action has cleared — then it's signed-only forever.
 
 To move a strategy from paper to live, the CEO will ask you. You must verify:
 1. Three consecutive profitable paper months

@@ -10,6 +10,8 @@
   "max_weekly_drawdown": 0.06,
   "max_monthly_drawdown": 0.10,
   "firm_kill_switch_monthly_pct": 0.15,
+  "drawdown_reference": "high_water_mark_excluding_deposits",
+  "cold_start_multiplier_by_day": {"0": 0.25, "30": 0.5, "60": 1.0},
   "fail_mode": "deny",
   "risk_service_timeout_seconds": 2,
   "max_quote_age_seconds": 5,
@@ -32,6 +34,9 @@
     "fail_mode=deny: the Execution Engineer MUST halt on any ambiguous signal — non-2xx risk check, risk-service timeout, stale quotes, broker disconnect. Never fail open.",
     "risk_service_timeout_seconds: if /risk/check takes longer than this, treat as deny and halt.",
     "max_quote_age_seconds: reject any order whose backing quote is older than this.",
-    "on_broker_disconnect: when IB Gateway / venue adapter disconnects, flatten open positions and halt until a human re-enables trading."
+    "on_broker_disconnect: when IB Gateway / venue adapter disconnects, flatten open positions and halt until a human re-enables trading.",
+    "drawdown_reference=high_water_mark_excluding_deposits: drawdown is measured against peak equity with deposits/withdrawals netted out. Without this, adding a tranche silently resets the denominator and the kill switch becomes unreachable.",
+    "cold_start_multiplier_by_day: when a strategy is first promoted paper->live, size is multiplied by the entry for its age in live-days. Day 0-29 = 0.25x, 30-59 = 0.5x, 60+ = 1.0x. Paper Sharpe 1.0 on 30 trades has a wide confidence interval; size the uncertainty.",
+    "HWM state lives at /etc/hwm_state.json on the risk host, root/risk owned. The Accountant POSTs equity snapshots daily to /hwm/equity; tranches and withdrawals POST to /hwm/deposit so the denominator excludes them."
   ]
 }
