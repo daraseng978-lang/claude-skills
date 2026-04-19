@@ -223,6 +223,8 @@ If you're running this autonomously on a VPS in founder-investor mode, see [PAPE
 
 For non-technical founders: [FOUNDER_QUICKSTART.md](FOUNDER_QUICKSTART.md) is the plain-English, step-by-step setup walkthrough (shopping list, two install scripts, IB wiring, paper-first cadence). [CEO_BOOTSTRAP.md](CEO_BOOTSTRAP.md) is the single prompt you paste to a fresh CEO agent on day one. It gives the CEO a first-week checklist (scaffold, import, wire routines, dry-run one strategy) with explicit **STOP** points where it must ask you before proceeding.
 
+Once the firm has 30+ live IB trades with positive expectancy, [PROP_FIRM_PLAYBOOK.md](PROP_FIRM_PLAYBOOK.md) covers leveraging prop-firm capital (Apex, MyFundedFutures, Topstep) to scale deployed capital to $300k+ without additional personal risk — algo-friendly firm selection, per-venue risk policy overrides, per-account ledgers, consistency-rule enforcement, and an eval-stacking schedule. Read it in month 6-7, not day one.
+
 ## Reference Library
 
 - [`references/backtesting-hygiene.md`](references/backtesting-hygiene.md) — lookahead, survivorship, overfit, walk-forward, fee/slip realism
