@@ -114,10 +114,13 @@ def load_csv(path: Path, tz_in: str | None) -> pd.DataFrame:
     if ts_col != "datetime":
         df = df.rename(columns={ts_col: "datetime"})
 
-    need = {"datetime", "open", "high", "low", "close", "volume"}
+    need = {"datetime", "open", "high", "low", "close"}
     missing = need - set(df.columns)
     if missing:
         raise SystemExit(f"CSV missing columns: {missing}. Got {list(df.columns)}")
+    if "volume" not in df.columns:
+        print("WARNING: 'volume' column missing from CSV — volume filter will be disabled for this run.")
+        df["volume"] = 0.0
 
     # Parse timestamps: Unix epoch (int/float) or ISO string
     s = df["datetime"]
@@ -179,6 +182,9 @@ class Trade:
 def backtest(df: pd.DataFrame, cfg: Config) -> tuple[list[Trade], pd.DataFrame]:
     # Precompute indicators
     df = df.copy()
+    # Auto-disable volume filter if the CSV has no usable volume data
+    if cfg.use_volume_filter and (df["volume"].fillna(0).max() <= 0):
+        cfg = Config(**{**cfg.__dict__, "use_volume_filter": False})
     df["vol_ma"] = df["volume"].shift(1).rolling(cfg.volume_ma_len).mean()
     df["atr14"] = atr(df, 14)
     # 15-min HTF EMA20 — resample close to 15m, EMA, forward-fill back to 5m
