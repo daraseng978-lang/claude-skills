@@ -97,22 +97,50 @@ def improved_cfg() -> Config:
 # --- Data loading --------------------------------------------------------
 
 def load_csv(path: Path, tz_in: str | None) -> pd.DataFrame:
+    """
+    Accepts:
+      - TradingView native export (columns: time, open, high, low, close, Volume, ...)
+        `time` can be Unix seconds or ISO 8601.
+      - Generic OHLCV (datetime, open, high, low, close, volume).
+    Extra columns (Volume MA, indicators, etc.) are ignored.
+    """
     df = pd.read_csv(path)
     df.columns = [c.strip().lower() for c in df.columns]
+
+    # Normalize timestamp column
+    ts_col = next((c for c in ("datetime", "time", "date") if c in df.columns), None)
+    if ts_col is None:
+        raise SystemExit(f"CSV missing timestamp column (expected 'datetime' or 'time'). Got {list(df.columns)}")
+    if ts_col != "datetime":
+        df = df.rename(columns={ts_col: "datetime"})
+
     need = {"datetime", "open", "high", "low", "close", "volume"}
     missing = need - set(df.columns)
     if missing:
         raise SystemExit(f"CSV missing columns: {missing}. Got {list(df.columns)}")
-    df["datetime"] = pd.to_datetime(df["datetime"], utc=(tz_in == "UTC"))
-    if tz_in and tz_in != "UTC":
-        df["datetime"] = df["datetime"].dt.tz_localize(tz_in)
+
+    # Parse timestamps: Unix epoch (int/float) or ISO string
+    s = df["datetime"]
+    try:
+        as_num = pd.to_numeric(s, errors="raise")
+        # TradingView epoch exports are seconds. Heuristic: > 10^12 is ms, > 10^10 is s.
+        unit = "s" if as_num.max() < 1e12 else "ms"
+        df["datetime"] = pd.to_datetime(as_num, unit=unit, utc=True)
+    except Exception:
+        df["datetime"] = pd.to_datetime(s, utc=(tz_in == "UTC"), errors="coerce")
+
     if df["datetime"].dt.tz is None:
-        df["datetime"] = df["datetime"].dt.tz_localize(NY)
+        # Naive string parse: localize per --tz-in or default NY
+        df["datetime"] = df["datetime"].dt.tz_localize(tz_in or str(NY))
+    elif tz_in and tz_in != "UTC" and "utc" in str(df["datetime"].dt.tz).lower():
+        # Caller insists on a specific TZ for a naive-looking stamp that parsed as UTC
+        df["datetime"] = df["datetime"].dt.tz_convert(tz_in)
+
     df["datetime"] = df["datetime"].dt.tz_convert(NY)
     df = df.sort_values("datetime").reset_index(drop=True)
     for c in ("open", "high", "low", "close", "volume"):
         df[c] = pd.to_numeric(df[c], errors="coerce")
-    df = df.dropna().reset_index(drop=True)
+    df = df.dropna(subset=["datetime", "open", "high", "low", "close", "volume"]).reset_index(drop=True)
     return df
 
 
