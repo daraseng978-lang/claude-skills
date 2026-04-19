@@ -1,0 +1,2 @@
+# Drop your MNQ OHLCV CSV exports in this directory.
+# TradingView native exports (time column, epoch seconds) are accepted as-is.
