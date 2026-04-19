@@ -54,6 +54,57 @@ def in_range(ts: int, start: int, end: int) -> bool:
     return start <= ts < end
 
 
+def compute_reconciliation(
+    capital: Dict[str, Any],
+    broker: Dict[str, Any],
+    drift_threshold: float = 1.0,
+) -> Dict[str, Any]:
+    """Reconcile internal ledger vs broker statement.
+
+    Broker statement schema (JSON, kept simple so a CEO agent can
+    produce it from IB Flex XML/CSV):
+    {
+      "as_of": 1712200000,
+      "cash": 7150.50,
+      "positions": [{"symbol": "AAPL", "qty": 10, "mark": 1850.30}],
+      "source": "ib-paper-flex"
+    }
+    """
+    ledger_realized = sum(float(p["amount"]) for p in capital.get("realized_pnl_events",
+                         capital.get("pnl_events", [])))
+    ledger_committed = sum(float(t["amount"]) for t in capital.get("tranches", []))
+    ledger_withdrawn = sum(float(w["amount"]) for w in capital.get("withdrawals", []))
+    ledger_active_alloc = sum(
+        float(a["amount"]) for a in capital.get("allocations", [])
+        if a.get("status") == "active"
+    )
+    # Expected cash at broker = committed + realized_pnl − withdrawn − active_in_positions
+    ledger_expected_cash = ledger_committed + ledger_realized - ledger_withdrawn - ledger_active_alloc
+
+    broker_cash = float(broker.get("cash", 0))
+    cash_drift = broker_cash - ledger_expected_cash
+    cash_flag = abs(cash_drift) > drift_threshold
+
+    broker_position_value = sum(
+        float(p.get("mark", 0)) for p in broker.get("positions", [])
+    )
+    positions_flag = False  # we don't model per-symbol positions in the ledger yet
+
+    return {
+        "as_of": broker.get("as_of"),
+        "source": broker.get("source", "unknown"),
+        "ledger_expected_cash": round(ledger_expected_cash, 2),
+        "broker_cash": round(broker_cash, 2),
+        "cash_drift": round(cash_drift, 2),
+        "cash_flag": cash_flag,
+        "broker_position_value": round(broker_position_value, 2),
+        "position_count": len(broker.get("positions", [])),
+        "positions_flag": positions_flag,
+        "drift_threshold": drift_threshold,
+        "ok": not (cash_flag or positions_flag),
+    }
+
+
 def compute_metrics(
     capital: Dict[str, Any],
     strategies: Dict[str, Any],
@@ -154,13 +205,42 @@ def compute_metrics(
     }
 
 
-def render_markdown(m: Dict[str, Any], firm_name: str) -> str:
+def render_markdown(m: Dict[str, Any], firm_name: str, recon: Dict[str, Any] = None) -> str:
     h = m["headline"]
     lines: List[str] = []
     lines.append(f"# Founder Report — {firm_name} — {m['month']}")
     lines.append("")
     lines.append("> The only thing you need to read this month.")
     lines.append("")
+
+    # Reconciliation block first — if it fails, the decision section is suppressed
+    lines.append("## Reconciliation")
+    lines.append("")
+    if recon is None:
+        lines.append("> **RECONCILIATION MISSING — decision section suppressed.**")
+        lines.append(">")
+        lines.append("> No `--broker-statement` was provided to this report. Internal P&L ")
+        lines.append("> has not been verified against the broker. Do NOT fund a new tranche ")
+        lines.append("> or approve a withdrawal on this report. Ask the Accountant agent to ")
+        lines.append("> export an IB Flex statement, convert to the broker JSON schema, and ")
+        lines.append("> rerun with `--broker-statement <path>`.")
+        lines.append("")
+    else:
+        status_icon = "OK" if recon["ok"] else "FLAGGED"
+        lines.append(f"- **Status:** {status_icon}")
+        lines.append(f"- **Source:** {recon['source']}")
+        lines.append(f"- **Ledger expected cash:** {recon['ledger_expected_cash']:.2f}")
+        lines.append(f"- **Broker cash:** {recon['broker_cash']:.2f}")
+        lines.append(f"- **Cash drift:** {recon['cash_drift']:+.2f}  "
+                     f"(threshold: {recon['drift_threshold']:.2f})")
+        lines.append(f"- **Broker open positions:** {recon['position_count']} "
+                     f"(mark value {recon['broker_position_value']:.2f})")
+        if recon["cash_flag"]:
+            lines.append("")
+            lines.append("> **DRIFT EXCEEDS THRESHOLD.** Do not fund or withdraw on this report ")
+            lines.append("> until the Accountant agent investigates the discrepancy.")
+        lines.append("")
+
     lines.append("## Headline")
     lines.append("")
     lines.append(f"- **Month P&L:** {h['month_pnl']:+.2f} ({h['monthly_return_pct']:+.2f}% on active allocation)")
@@ -207,6 +287,16 @@ def render_markdown(m: Dict[str, Any], firm_name: str) -> str:
 
     lines.append("## The decision")
     lines.append("")
+    if recon is None or not recon.get("ok", False):
+        lines.append("- **Ask:** NONE. Reconciliation is missing or flagged; no capital movement "
+                     "should be recommended until broker statement ties to ledger.")
+        lines.append("")
+        lines.append("## Assumptions in this report")
+        lines.append("")
+        lines.append("- P&L is as marked by the Accountant role; verify against venue statements monthly.")
+        lines.append("- ROI % uses current active allocation as denominator (not peak allocation).")
+        lines.append("- Reconciliation is a hard gate: no fund/withdraw recommendation without a clean broker tie-out.")
+        return "\n".join(lines)
     if h["available"] < h["active_allocation"] * 0.2:
         lines.append(
             "- **Ask:** fund another tranche. Available capital is less than 20% of active allocation."
@@ -246,16 +336,27 @@ def main() -> int:
     p.add_argument("--firm-name", default="Your Firm")
     p.add_argument("--out", default="", help="write markdown to this file (default: stdout)")
     p.add_argument("--format", default="markdown", choices=["markdown", "json"])
+    p.add_argument("--broker-statement", default="",
+                   help="path to broker statement JSON for reconciliation (if omitted, "
+                        "the decision section is suppressed)")
+    p.add_argument("--drift-threshold", type=float, default=1.0,
+                   help="cash drift threshold in base currency; exceeding it flags the report")
     args = p.parse_args()
 
     capital = load(args.capital)
     strategies = load(args.strategies)
     m = compute_metrics(capital, strategies, args.month)
+    recon = None
+    if args.broker_statement:
+        broker = load(args.broker_statement)
+        recon = compute_reconciliation(capital, broker, args.drift_threshold)
 
     if args.format == "json":
-        out = json.dumps(m, indent=2)
+        payload = dict(m)
+        payload["reconciliation"] = recon
+        out = json.dumps(payload, indent=2)
     else:
-        out = render_markdown(m, args.firm_name)
+        out = render_markdown(m, args.firm_name, recon)
 
     if args.out:
         os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)

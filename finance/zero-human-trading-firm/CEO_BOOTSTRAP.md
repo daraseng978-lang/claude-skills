@@ -34,9 +34,15 @@ Work the list top-to-bottom. Stop and ask the founder only when you hit a **STOP
 2. **Scaffold the firm.** `mkdir -p ~/firms/<firm-slug> && python3 <SKILLS_REPO_PATH>/finance/zero-human-trading-firm/scripts/firm_init.py --name "<FIRM_NAME>" --venue <VENUE> --out ~/firms/<firm-slug>`. Commit the folder to a private git repo.
 3. **Fill role instructions.** For each file in `roles/*.md`, replace the `[Fill this in...]` sections. Use `cs-ceo-advisor.md` style for tone. Keep each role under 300 lines.
 4. **Import org chart into Paperclip.** Dashboard → Org chart → Import → `~/firms/<firm-slug>/org_chart.json`. Attach the `recommended_skills` listed per role via the Skills Manager.
-5. **STOP → ask founder** to confirm `<RISK_HOST_URL>` is reachable but NOT deployable from this VPS. If you can `ssh` or `git push` to the risk host, the firm is not safe to run. Ask the founder to fix before continuing.
+5. **STOP → prove risk host is isolated, then ask the founder to confirm.** Run these three commands from the VPS and paste the EXACT output to the founder:
+   ```
+   ssh -o BatchMode=yes -o ConnectTimeout=5 root@<RISK_HOST_IP> "echo pwned" ; echo "exit=$?"
+   curl -sS -X PUT -d '{}' <RISK_HOST_URL>/risk/policy ; echo
+   ssh -o BatchMode=yes -o ConnectTimeout=5 risk@<RISK_HOST_IP> "echo pwned" ; echo "exit=$?"
+   ```
+   All three MUST fail (connection refused, permission denied, 404/405, or exit != 0). If ANY of them succeeds, the risk host is compromised — stop here and ask the founder to re-run `install_risk_host.sh`. Then tell the founder, in plain English: "I tried three ways to touch the risk host; all three were rejected. Confirm we proceed?" Wait for the founder's "yes" before continuing.
 6. **Wire the risk service call.** In the Execution Engineer's instructions add: "every order must first `POST <RISK_HOST_URL>/risk/check` with `Authorization: Bearer <RISK_HOST_TOKEN>`; if `approved: false`, halt."
-7. **Configure brokerage adapter.** Use `<BROKERAGE>` in paper mode only. Store `<BROKERAGE_KEY>`/`<BROKERAGE_SECRET>` as Paperclip secrets, never in role instructions.
+7. **Configure brokerage adapter.** Use `<BROKERAGE>` in paper mode only. Store `<BROKERAGE_KEY>`/`<BROKERAGE_SECRET>` as Paperclip secrets, never in role instructions. **If `<BROKERAGE>` = `ib-paper`:** you are responsible for installing IB Gateway and IBC on the VPS. The founder should NOT be asked to run `x11vnc` or any desktop setup. Do the install headless using IBC's `StartIBC.sh` against Gateway's "offline stable" build; configure 2FA = "IBKR Mobile" so IBC can auto-reconnect after the daily logout. Verify end-to-end with a `whatIf=True` order; paste the accepted response to the founder.
 8. **Wire the six routines** from `PAPERCLIP.md` §6. The monthly founder report must have `engineering/self-eval/SKILL.md` attached as reviewer.
 9. **Dry-run one strategy end-to-end.** Have the Strategy Researcher propose a trivial SMA-cross idea. Walk it through `proposed → backtested → red_teamed → ready_for_paper`. Do NOT promote to `paper` yet. Post the ledger to the founder.
 10. **STOP → send the founder a "ready for paper" note.** One page: what's wired, what's dry-tested, what you'd like approval to trade, proposed first tranche size in paper dollars. Wait for the founder's reply.
@@ -64,6 +70,11 @@ Everything else is yours. Write it up in the weekly note instead.
 - You do not hold both the `red_team_signed_off` and `risk_officer_signed_off` flags under one agent identity. Reject any promotion that has them signed by the same identity.
 - You do not promote paper→live in the first 30 days.
 - You do not run more than 3 concurrent agents in the first 30 days.
+- **Default-deny.** If `POST <RISK_HOST_URL>/risk/check` returns non-2xx, times out after more than `risk_service_timeout_seconds` (default 2s), or is unreachable, the Execution Engineer MUST halt. Never retry-until-success. Never fail open. Log the failure, page the Risk Officer, wait for human intervention.
+- **Stale-quote guard.** Reject any order whose backing quote is older than `max_quote_age_seconds` (default 5s).
+- **Broker disconnect = halt.** If IB Gateway / the venue adapter disconnects, flatten open positions per `on_broker_disconnect` policy and halt new orders until a human re-enables trading.
+- **72-hour founder-silence rule.** If a request was escalated to the founder and received no reply within 72 hours, assume "no" and do NOT proceed. Send a single reminder at 24h and 48h; after 72h mark the request declined and move on.
+- **Risk-policy-change request wording.** Any message proposing a change to `risk_policy.json` MUST include, verbatim, the sentence: `"This is a hard-limit change and requires your signature."` Without that sentence the request is invalid.
 
 ### When in doubt
 

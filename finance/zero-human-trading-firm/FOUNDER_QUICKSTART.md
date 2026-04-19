@@ -2,24 +2,51 @@
 
 **Plain-English setup for non-technical founders.** Follow these steps in order. Nothing here costs more than ~$30/mo or risks real money until you explicitly approve it.
 
-Expected time: **~90 minutes** spread over a day. You can pause at any numbered step.
+**Honest time commitment:**
+- **Setup:** ~90 minutes spread over a day (the steps below). You can pause at any numbered step.
+- **First 90 days:** ~30 min/week reading the Sunday CEO note and tightening role instructions.
+- **After 90 days:** ~15 min/month reading the founder report and approving/declining the one recommended action.
+
+If anyone (including me) sells you "10 min/month from day one," they're selling a fantasy. A fresh AI trading firm needs babysitting until its taste is trained.
 
 ---
 
 ## Before you start: shopping list
 
-Buy / sign up for these. You only do this once.
+Buy / sign up for these. You only do this once. **Pick one of two modes:**
+
+### Recommended mode — "Real founder mode" (~$150/mo floor)
+
+This is what a real quant firm costs. You get dual-harness agents, proper isolation, commercial data.
 
 | # | Thing | Where | Cost | Time |
 |---|-------|-------|------|------|
-| 1 | Main VPS (8 GB RAM, Ubuntu 22.04) | Hetzner, DigitalOcean, Linode — your choice | ~$20/mo | 5 min |
+| 1 | Main VPS (8 GB RAM, Ubuntu 22.04/24.04) | Hetzner, DigitalOcean, Linode, Vultr — pick one | ~$20/mo | 5 min |
 | 2 | Risk host VM (1 GB RAM, Ubuntu 22.04) | **Different account/provider from #1** | ~$5/mo | 5 min |
-| 3 | IB paper-trading account | alredy have this via your IB login | free | 2 min to enable API |
-| 4 | Claude Code subscription | claude.ai | $20/mo | 2 min |
+| 3 | IB paper-trading account | already included with your IB login | free | 2 min to enable API |
+| 4 | Claude Code Pro (CEO/CTO seats) | claude.ai | ~$100/mo | 2 min |
+| 5 | Codex subscription (for dual-harness sign-off on Red Team vs Risk Officer) | openai.com | ~$20/mo | 2 min |
+| 6 | Data feed (if your strategy needs realtime equity or crypto quotes beyond what IB gives you) | varies | $0–$200/mo | varies |
 
-**Why two different providers?** If one account is compromised, the attacker can't reach both. This is the single most important setup rule.
+**Realistic monthly floor: ~$150/mo before data feeds.** Anyone selling you a cheaper-than-$45/mo setup is selling a toy. Budget accordingly.
 
-After you finish the shopping list, you'll have **two IP addresses** (call them `<VPS_IP>` and `<RISK_IP>`) and **one IB paper account number** (looks like `DU1234567`).
+### Minimum-viable mode — "$35/mo bootstrap"
+
+If you want to learn the plumbing before committing $150/mo, this still preserves the risk isolation (same VM, different Unix user + read-only policy file) without renting a second machine. It is **less safe** than the recommended mode and you should migrate off it within 60 days.
+
+| # | Thing | Where | Cost | Time |
+|---|-------|-------|------|------|
+| 1 | One VPS (4 GB RAM, Ubuntu 22.04) | any | ~$15/mo | 5 min |
+| 2 | IB paper-trading account | already included | free | 2 min |
+| 3 | Claude Code Pro | claude.ai | $20/mo | 2 min |
+| 4 | Skip Codex for now — accept that Red Team and Risk Officer share one harness | — | $0 | — |
+| 5 | Run risk service as a systemd unit under a different Unix user on the same VPS, policy file owned by root | — | $0 | (CEO agent handles it) |
+
+**Tradeoffs in MVP mode:** if the agent user on the VPS is ever compromised, the attacker could also attack the risk process (same kernel, same box). This is NOT acceptable for live trading, only for learning on paper. The CEO agent's first-week checklist will warn you to upgrade before promotion.
+
+**Why the two-provider rule matters** (recommended mode): if one cloud account is compromised, the attacker can't reach both. This is the single most important setup rule.
+
+After you finish the shopping list, you'll have **two IP addresses** (call them `<VPS_IP>` and `<RISK_IP>`; in MVP mode they're the same) and **one IB paper account number** (looks like `DU1234567`).
 
 ---
 
@@ -84,25 +111,11 @@ Write down your **paper account ID** (starts with `DU`, e.g. `DU1234567`).
 
 ---
 
-## Step 4 — Install IB Gateway on the VPS (~10 min)
+## Step 4 — Skip this step
 
-Back on the main VPS (SSH as the `agent` user this time):
+The CEO agent installs IB Gateway + IBC for you in Step 5. If you tried to do it yourself you'd land in a GUI/VNC rabbit hole that isn't worth the hour. Keep moving.
 
-```
-ssh root@<VPS_IP>
-su - agent
-```
-
-Download IB Gateway (the founder picks "offline stable" from IB's download page). Run it once with the GUI (if your VPS doesn't have a desktop, use `x11vnc` or run Gateway on your laptop temporarily to verify login works, then move the config to the VPS).
-
-Install **IBC** so Gateway restarts itself daily:
-
-```
-curl -L -o /tmp/ibc.zip https://github.com/IbcAlpha/IBC/releases/latest/download/IBCLinux.zip
-unzip /tmp/ibc.zip -d ~/ibc
-```
-
-Tell the CEO agent to finish IBC configuration for you — it's fiddly and the CEO has the `engineering/ci-cd-pipeline-builder` skill attached for exactly this.
+(You'll hand the CEO your IB paper account ID and your IB login password, one-time, through Paperclip's Secret Manager — never in chat, never in a role instruction file. The agent has the `engineering/ci-cd-pipeline-builder` skill attached for exactly this.)
 
 ---
 
@@ -148,9 +161,37 @@ On the 1st of each month, Paperclip drops a **founder report** in your inbox. On
 
 | Report says | You do |
 |-------------|--------|
-| "Fund another tranche" | SSH in, run `python3 capital_allocator.py fund --amount X --note "..."` |
-| "Sweep profit" | SSH in, run `python3 capital_allocator.py withdraw --amount X --note "..."` |
+| "Fund another tranche" | Approve the signed action the CEO proposed (see below). |
+| "Sweep profit" | Approve the signed action the CEO proposed (see below). |
 | "Stay the course" | Nothing. |
+
+**The signed-action workflow (capital moves have an audit trail):**
+
+Capital movement never happens at a shell prompt with free-form arguments — that's how firms lose money to fat fingers. Every fund/withdraw goes through a **signed action artifact** committed to your private `firm-actions` git repo. The workflow:
+
+1. CEO proposes:
+   ```
+   python3 capital_action.py propose --action fund --amount 10000 \
+     --reason "month 2 budget per founder report"
+   ```
+   This writes `actions/pending/A-YYYY-MM-DD-HHMMSS-fund.json`.
+2. You review the JSON file. If it matches what you wanted:
+   ```
+   python3 capital_action.py approve --file actions/pending/A-...-fund.json
+   git add actions/approved/A-...-fund.json
+   git commit -sS -m "approve A-...-fund: +10000"
+   ```
+   The `-s -S` flags sign the commit with your GPG key. That commit is the audit trail.
+3. CEO (or you) applies the approved action:
+   ```
+   python3 capital_allocator.py fund --amount 10000 \
+     --action-file actions/approved/A-...-fund.json
+   ```
+   The allocator verifies the file exists, is approved, and amount matches, then commits the tranche to `capital_ledger.json` with the `action_id` linked.
+
+If you accidentally typo `--amount 20000` into the allocator but the approved action says `10000`, the allocator rejects it. This is the point.
+
+In break-glass emergencies (the CEO is compromised, kill switch fired, manual positions), the allocator still accepts unsigned fund/withdraw if `require_signed_actions: false` in the ledger. Flip that to `true` in the ledger once your first signed action has cleared — then it's signed-only forever.
 
 To move a strategy from paper to live, the CEO will ask you. You must verify:
 1. Three consecutive profitable paper months
@@ -163,11 +204,48 @@ If any of the three fails, say no. No pressure — the firm keeps running on pap
 
 ## Escape hatches
 
-**Something feels wrong.** In Paperclip chat, tell the CEO: "halt all trading". It flattens positions and stops.
+In order of escalation. If level 1 doesn't work, go to level 2. If level 2 doesn't work, go to level 3. Don't panic — these exist because the CEO agent WILL hallucinate eventually and you need to know you can always win.
 
-**You get a kill-switch page.** Open Paperclip on your phone. Confirm trading is halted. Decide: reset the switch, or wind down.
+**Level 1 — Tell the CEO in chat.** "Halt all trading." It flattens positions and stops. Works when the CEO agent is responsive.
 
-**You want out.** Shut down both VMs from the provider dashboards. You lose ~$25 and nothing else, because you stayed in paper.
+**Level 2 — Stop Paperclip from the command line.** On your laptop:
+```
+ssh agent@<VPS_IP> 'sudo systemctl stop paperclip'
+```
+This kills the agent orchestration. The risk service (on the other VM) is still up, but nobody's sending orders. Works when the CEO is hallucinating, looping, or ignoring you.
+
+**Level 3 — Manual liquidation in IB Client Portal.** If Paperclip is wedged AND you have live positions you want closed, do it yourself:
+1. Log in to IB Client Portal on your laptop
+2. Orders & Trades → cancel every open order
+3. Positions → right-click any position → Close Position → MKT order
+4. Verify Account Summary shows flat (zero positions, no open orders)
+
+Keep IB Client Portal bookmarked. You don't want to be searching for it at 2am.
+
+**Level 4 — Shut everything down.** Destroy both VMs from the provider dashboards. You lose ~$25 and nothing else, because you stayed in paper. You can rebuild from a fresh `install_vps.sh` + `install_risk_host.sh` anytime.
+
+---
+
+## What happens if you disappear for 2 weeks
+
+Weddings, vacations, broken wrists — you will eventually be unreachable. Defaults are set so the firm survives your absence without doing anything stupid.
+
+**In paper mode (first 30+ days — your likely state):**
+- The firm keeps paper trading. No risk to you.
+- Weekly notes and monthly reports queue up in Paperclip. Read them when you get back.
+- No paper→live promotions happen without your reply. The CEO will ask, wait 72 hours per the escalation rule, and then mark the request **declined** automatically. You won't come back to find a live strategy.
+
+**In live mode (if/when you get there):**
+- Live strategies keep trading within `risk_policy.json` limits.
+- The firm kill switch (`firm_kill_switch_monthly_pct`, default 15%) auto-flattens everything if monthly drawdown breaches it. No human required.
+- Any proposed risk-policy change auto-declines after 72 hours of silence.
+- Any new tranche / withdrawal request auto-declines after 72 hours of silence.
+
+**If your internet dies for a day:** nothing happens to your money. Paperclip is on the VPS, not your laptop. The agents keep running. You catch up when you're back online.
+
+**If your PagerDuty / phone push fails during a kill-switch event:** the kill switch still fires. Trading halts. You'll find out when you check the dashboard. Positions are flat; the worst case is lost opportunity, not lost capital.
+
+**Set up before you go:** put the VPS IP, risk host IP, and IB account ID in your password manager. Tell one trusted person how to run Level 2 and Level 3. That's the only "second pair of eyes" you need.
 
 ---
 
