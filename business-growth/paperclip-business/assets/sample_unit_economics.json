@@ -1,0 +1,9 @@
+{
+  "tier_name": "Growth",
+  "monthly_price": 4000,
+  "variable_cost_per_customer": 700,
+  "fixed_monthly_overhead": 450,
+  "blended_cac": 1200,
+  "monthly_logo_churn": 0.04,
+  "monthly_net_expansion": 0.015
+}

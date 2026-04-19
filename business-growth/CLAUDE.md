@@ -8,8 +8,9 @@ This guide covers the 3 production-ready business and growth skills and their Py
 1. **customer-success-manager/** - Customer health scoring, churn risk analysis, expansion opportunities (3 Python tools)
 2. **sales-engineer/** - Technical discovery, RFP analysis, competitive positioning, POC planning (3 Python tools)
 3. **revenue-operations/** - Pipeline analysis, forecast accuracy, GTM efficiency metrics (3 Python tools)
+4. **paperclip-business/** - Agent-operated productized-service blueprint with MRR forecasting, unit-economics modeling, business-model selector, and founder dashboard (4 Python tools, 8 reference guides, 4 asset templates)
 
-**Total Tools:** 9 Python automation tools, 9 knowledge bases, 19+ templates
+**Total Tools:** 13 Python automation tools, 17 knowledge bases, 23+ templates
 
 ## Python Automation Tools
 
@@ -164,6 +165,71 @@ python revenue-operations/scripts/gtm_efficiency_calculator.py gtm_data.json
 python revenue-operations/scripts/gtm_efficiency_calculator.py gtm_data.json --format json
 ```
 
+### Paperclip Business Tools
+
+#### 10. Business Model Selector (`paperclip-business/scripts/business_model_selector.py`)
+
+**Purpose:** Rank 5 candidate Claude-operated businesses against founder constraints
+
+**Features:**
+- 5 pre-scored candidates (SEO content, competitor intel, PR review, lead enrichment, newsletter)
+- Constraint-aware adjustments (capital, time, expertise, risk, geography)
+- Weighted scoring: automation fit, buyer clarity, margin, time-to-revenue, defensibility
+- Rationale and adjustment trace for each candidate
+
+**Usage:**
+```bash
+python paperclip-business/scripts/business_model_selector.py --input sample_business_inputs.json
+python paperclip-business/scripts/business_model_selector.py --input sample_business_inputs.json --format json
+```
+
+#### 11. Unit Economics Modeler (`paperclip-business/scripts/unit_economics_modeler.py`)
+
+**Purpose:** Model gross margin, CAC, payback, LTV, and break-even for a tier
+
+**Features:**
+- Contribution margin per customer
+- Effective churn with expansion offset
+- LTV in months and dollars
+- CAC payback period
+- Automatic warnings on margin/payback/LTV:CAC/churn thresholds
+
+**Usage:**
+```bash
+python paperclip-business/scripts/unit_economics_modeler.py --input sample_unit_economics.json
+```
+
+#### 12. MRR Forecaster (`paperclip-business/scripts/mrr_forecaster.py`)
+
+**Purpose:** Cohort-based MRR simulation to $10k/$50k/$100k milestones
+
+**Features:**
+- Monthly cohort simulation with growth and churn
+- Expansion revenue modeling
+- Milestone hit-month identification
+- 24-month default horizon (configurable)
+
+**Usage:**
+```bash
+python paperclip-business/scripts/mrr_forecaster.py --input sample_mrr_inputs.json
+```
+
+#### 13. Founder Dashboard (`paperclip-business/scripts/founder_dashboard.py`)
+
+**Purpose:** Weekly digest the founder reads (only report they need)
+
+**Features:**
+- MRR WoW and MoM deltas
+- Pipeline coverage vs quota
+- Runway calculation
+- Automatic red-flag detection (SLA misses, spam rate, concentration, churn, burn)
+- Surfaces only escalations requiring founder decision
+
+**Usage:**
+```bash
+python paperclip-business/scripts/founder_dashboard.py --input sample_weekly_state.json
+```
+
 ## Quality Standards
 
 **All business & growth Python tools must:**
@@ -183,6 +249,6 @@ python revenue-operations/scripts/gtm_efficiency_calculator.py gtm_data.json --f
 
 ---
 
-**Last Updated:** February 2026
-**Skills Deployed:** 3/3 business & growth skills production-ready
-**Total Tools:** 9 Python automation tools
+**Last Updated:** April 2026
+**Skills Deployed:** 4/4 business & growth skills production-ready
+**Total Tools:** 13 Python automation tools

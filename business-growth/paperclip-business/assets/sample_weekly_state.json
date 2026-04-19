@@ -1,0 +1,39 @@
+{
+  "week_ending": "2026-04-19",
+  "mrr_current": 28400,
+  "mrr_last_week": 26200,
+  "mrr_4_weeks_ago": 21500,
+  "new_logos_this_week": 1,
+  "churned_logos_this_week": 0,
+  "pipeline_value": 92000,
+  "quota_this_month": 35000,
+  "meetings_booked": 12,
+  "meetings_held": 9,
+  "close_rate_trailing_4wk": 0.28,
+  "cash_balance": 48000,
+  "monthly_burn": 6500,
+  "delivery_sla_miss_count": 1,
+  "cold_email_spam_rate": 0.0003,
+  "customer_concentration_top1": 0.18,
+  "escalations": [
+    {
+      "topic": "Top customer is 18% of MRR (concentration risk)",
+      "urgency": "high",
+      "options": [
+        "Cap net new acquisitions in their vertical for 60 days",
+        "Accelerate diversification via SEO content flywheel",
+        "Request a 12-month commit to lock them in"
+      ],
+      "recommendation": "Request 12-month commit + diversify with inbound for 60 days."
+    },
+    {
+      "topic": "One delivery SLA miss this week (customer: Acme Corp, +2 days)",
+      "urgency": "standard",
+      "options": [
+        "Apologize + offer free extra article as goodwill",
+        "Investigate root cause (agent timeout, source gathering, or QA loop)"
+      ],
+      "recommendation": "Do both; root-cause in agent log first."
+    }
+  ]
+}
