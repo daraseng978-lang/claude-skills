@@ -33,3 +33,9 @@ Append-only. Each entry is a ratified decision per the `decision-logger` pattern
 - **Date:** 2026-04-19
 - **Decider:** Founder
 - **Decision:** Founder touches project at budget gates only. Chief of Staff is the only agent that messages founder.
+
+## D-006 — Domain purchased
+- **Date:** 2026-04-19
+- **Decider:** Founder
+- **Decision:** Registered **accessremodel.co** (.com unavailable or too expensive).
+- **Implication:** All canonical URLs, meta tags, email sender domains use `.co`. SEO brand terms reference "AccessRemodel" (no TLD) to stay resilient.

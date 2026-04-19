@@ -16,7 +16,7 @@ Append-only. Updated by CFO. Founder signs each `Approved` line.
 
 | Date | Amount | Vendor | Invoice | Paid by |
 |---|---|---|---|---|
-| _pending founder execution_ | | | | |
+| 2026-04-19 | ~$12 | Domain registrar | accessremodel.co | Founder |
 
 ## Running Balance
 
