@@ -1,0 +1,27 @@
+{
+  "cost_per_sku_usd": 15.0,
+  "publish_days_per_week": 5,
+  "skus_per_day": 2,
+  "niches": [
+    {
+      "name": "Large-print word search for seniors",
+      "skus": 10,
+      "base_royalty_per_month": 180.0
+    },
+    {
+      "name": "Sudoku easy/medium/hard (3 difficulty volumes)",
+      "skus": 9,
+      "base_royalty_per_month": 150.0
+    },
+    {
+      "name": "Mazes for kids ages 6-8",
+      "skus": 6,
+      "base_royalty_per_month": 120.0
+    },
+    {
+      "name": "Themed word search: gardening, cooking, travel",
+      "skus": 6,
+      "base_royalty_per_month": 90.0
+    }
+  ]
+}

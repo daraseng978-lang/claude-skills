@@ -1,0 +1,97 @@
+{
+  "niche": "Large-Print Word Search for Seniors",
+  "as_of": "2026-04-20",
+  "seasonal": false,
+  "competitors": [
+    {
+      "asin": "B0EXAMPLE01",
+      "bsr": 12450,
+      "price": 8.99,
+      "reviews": 620,
+      "rating": 4.6,
+      "published": "2023-05-11",
+      "big_publisher": false
+    },
+    {
+      "asin": "B0EXAMPLE02",
+      "bsr": 18870,
+      "price": 7.99,
+      "reviews": 1180,
+      "rating": 4.5,
+      "published": "2022-01-04",
+      "big_publisher": false
+    },
+    {
+      "asin": "B0EXAMPLE03",
+      "bsr": 26540,
+      "price": 9.99,
+      "reviews": 340,
+      "rating": 4.4,
+      "published": "2024-03-22",
+      "big_publisher": false
+    },
+    {
+      "asin": "B0EXAMPLE04",
+      "bsr": 34110,
+      "price": 8.99,
+      "reviews": 295,
+      "rating": 4.3,
+      "published": "2023-11-02",
+      "big_publisher": false
+    },
+    {
+      "asin": "B0EXAMPLE05",
+      "bsr": 42300,
+      "price": 10.99,
+      "reviews": 88,
+      "rating": 4.7,
+      "published": "2025-02-18",
+      "big_publisher": false
+    },
+    {
+      "asin": "B0EXAMPLE06",
+      "bsr": 58900,
+      "price": 7.99,
+      "reviews": 2440,
+      "rating": 4.5,
+      "published": "2019-07-30",
+      "big_publisher": true
+    },
+    {
+      "asin": "B0EXAMPLE07",
+      "bsr": 71250,
+      "price": 8.49,
+      "reviews": 520,
+      "rating": 4.4,
+      "published": "2021-09-15",
+      "big_publisher": false
+    },
+    {
+      "asin": "B0EXAMPLE08",
+      "bsr": 86600,
+      "price": 9.99,
+      "reviews": 145,
+      "rating": 4.6,
+      "published": "2024-08-04",
+      "big_publisher": false
+    },
+    {
+      "asin": "B0EXAMPLE09",
+      "bsr": 97850,
+      "price": 8.99,
+      "reviews": 410,
+      "rating": 4.3,
+      "published": "2022-12-01",
+      "big_publisher": false
+    },
+    {
+      "asin": "B0EXAMPLE10",
+      "bsr": 112400,
+      "price": 7.49,
+      "reviews": 64,
+      "rating": 4.2,
+      "published": "2025-06-11",
+      "big_publisher": false
+    }
+  ]
+}

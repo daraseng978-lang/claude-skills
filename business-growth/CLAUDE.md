@@ -1,6 +1,6 @@
 # Business & Growth Skills - Claude Code Guidance
 
-This guide covers the 3 production-ready business and growth skills and their Python automation tools.
+This guide covers the production-ready business and growth skills and their Python automation tools.
 
 ## Business & Growth Skills Overview
 
@@ -9,8 +9,9 @@ This guide covers the 3 production-ready business and growth skills and their Py
 2. **sales-engineer/** - Technical discovery, RFP analysis, competitive positioning, POC planning (3 Python tools)
 3. **revenue-operations/** - Pipeline analysis, forecast accuracy, GTM efficiency metrics (3 Python tools)
 4. **paperclip-business/** - Agent-operated productized-service blueprint with MRR forecasting, unit-economics modeling, business-model selector, and founder dashboard (4 Python tools, 8 reference guides, 4 asset templates)
+5. **kdp-puzzle-publisher/** - Claude-powered Amazon KDP puzzle-book publishing company with niche scoring, BSR-to-revenue estimation, KDP listing builder, and portfolio planner (4 Python tools, 7 reference guides, 6 asset templates)
 
-**Total Tools:** 13 Python automation tools, 17 knowledge bases, 23+ templates
+**Total Tools:** 17 Python automation tools, 24 knowledge bases, 29+ templates
 
 ## Python Automation Tools
 
@@ -230,6 +231,67 @@ python paperclip-business/scripts/mrr_forecaster.py --input sample_mrr_inputs.js
 python paperclip-business/scripts/founder_dashboard.py --input sample_weekly_state.json
 ```
 
+### KDP Puzzle Publisher Tools
+
+#### 14. Niche Scorer (`kdp-puzzle-publisher/scripts/niche_scorer.py`)
+
+**Purpose:** Score a KDP puzzle-book niche against public Amazon signals (BSR, reviews, price, freshness)
+
+**Features:**
+- Log-linear demand, competition, pricing, and freshness sub-scores
+- Saturation + seasonality flags
+- Niche-specific recommendations
+- GO / CONDITIONAL / PASS verdict with 0-100 overall
+
+**Usage:**
+```bash
+python kdp-puzzle-publisher/scripts/niche_scorer.py --input sample_niche_inputs.json
+```
+
+#### 15. BSR to Revenue (`kdp-puzzle-publisher/scripts/bsr_to_revenue.py`)
+
+**Purpose:** Estimate daily sales and monthly royalty from an Amazon BSR
+
+**Features:**
+- Piecewise log-log curve fit to public BSR anchors
+- Configurable price, print cost, and royalty rate (paperback/Kindle)
+- Confidence label based on BSR tier
+
+**Usage:**
+```bash
+python kdp-puzzle-publisher/scripts/bsr_to_revenue.py --bsr 12450 --price 8.99
+```
+
+#### 16. KDP Listing Builder (`kdp-puzzle-publisher/scripts/kdp_listing_builder.py`)
+
+**Purpose:** Generate a KDP-compliant listing (title, subtitle, description, 7 keywords, 2 categories) from a concept brief
+
+**Features:**
+- Validates character limits per KDP's 200/200/4000 rules
+- Flags banned words (bestseller, #1, free) and trademark hits
+- Naive keyword-stuffing detector
+- Category defaults per puzzle type + audience
+
+**Usage:**
+```bash
+python kdp-puzzle-publisher/scripts/kdp_listing_builder.py --input sample_listing_inputs.json
+```
+
+#### 17. Portfolio Planner (`kdp-puzzle-publisher/scripts/portfolio_planner.py`)
+
+**Purpose:** Forecast expected monthly royalty and publishing schedule across a multi-SKU portfolio
+
+**Features:**
+- Power-law hit-rate model (home runs / winners / breakeven / duds)
+- Weekly publishing schedule respects KDP's 3-per-day cap
+- Months-to-breakeven against upfront per-SKU investment
+- Per-niche expected royalty breakdown
+
+**Usage:**
+```bash
+python kdp-puzzle-publisher/scripts/portfolio_planner.py --input sample_portfolio_inputs.json
+```
+
 ## Quality Standards
 
 **All business & growth Python tools must:**
@@ -250,5 +312,5 @@ python paperclip-business/scripts/founder_dashboard.py --input sample_weekly_sta
 ---
 
 **Last Updated:** April 2026
-**Skills Deployed:** 4/4 business & growth skills production-ready
+**Skills Deployed:** 5/5 business & growth skills production-ready
 **Total Tools:** 13 Python automation tools
