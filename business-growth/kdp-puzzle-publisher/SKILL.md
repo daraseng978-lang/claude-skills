@@ -176,3 +176,27 @@ Sample inputs are in `assets/`.
 - `assets/book_brief_template.md` — hand off to Claude to generate a manuscript
 - `assets/claude_prompts.md` — reusable prompts for research/content/listing agents
 - `assets/publishing_checklist.md` — 40-point pre-publish QA list
+
+---
+
+## Related Skills
+
+This skill covers the **operational pipeline** for building a KDP puzzle-book catalog. For the **founder/operator side** — time allocation, burnout prevention, delegation, and the weekly operating rhythm — pair it with:
+
+- [`c-level-advisor/solo-founder/`](../../c-level-advisor/solo-founder/SKILL.md) — Chief Everything Officer advisor for one-person businesses. Use it to scope the MVP catalog (first 9 SKUs), fight scope creep when you're tempted to publish into 7 niches at once, price against your realistic time budget, and make the quit-your-job call once royalty is consistent. Best match while you're pre-revenue through your first ~$1k/month.
+- [`c-level-advisor/founder-coach/`](../../c-level-advisor/founder-coach/SKILL.md) — Founder development and leadership growth. Use it once the catalog passes ~30 SKUs and you're deciding what to outsource (cover design, interior layout, QA solving), how to structure your week as an operator vs. a creator, and how to avoid becoming the bottleneck on a portfolio you no longer need to touch daily.
+
+Typical handoff pattern:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ solo-founder     →  "Should I start this? What's the MVP?"   │
+│ kdp-puzzle-publ. →  The pipeline for each SKU you publish.   │
+│ founder-coach    →  "Now that it works, how do I scale me?"  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+Adjacent domain skills:
+
+- [`business-growth/paperclip-business/`](../paperclip-business/SKILL.md) — if you want to convert KDP royalty into a productized SaaS/service business with recurring revenue.
+- [`marketing-skill/`](../../marketing-skill/) — for Amazon Ads copy, keyword research beyond KDP's 7 slots, and email/social promotion of a branded series.
