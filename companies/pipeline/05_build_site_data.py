@@ -25,8 +25,13 @@ def slugify(s: str) -> str:
     return re.sub(r"-+", "-", s)
 
 
+TIER_MAP = {"specialist": "specialist", "offers": "offers"}
+
+
 def row_to_listing(row: dict) -> dict:
     services = [t for t in (row.get("services") or "").split("|") if t]
+    verdict = (row.get("verdict") or "").strip().lower()
+    tier = TIER_MAP.get(verdict, "unverified")
     return {
         "id": slugify(f"{row['name']}-{row.get('city', '')}-{row.get('state', '')}"),
         "name": row["name"],
@@ -41,7 +46,9 @@ def row_to_listing(row: dict) -> dict:
         "reviews": int(row["reviews"]) if row.get("reviews", "").isdigit() else 0,
         "lat": float(row["latitude"]) if row.get("latitude") else None,
         "lng": float(row["longitude"]) if row.get("longitude") else None,
-        "verdict": row.get("verdict", ""),
+        "tier": tier,
+        "verdict": verdict,
+        "confidence": int(row["confidence"]) if (row.get("confidence") or "").isdigit() else 0,
         "services": services,
         "caps_certified": str(row.get("caps_certified", "")).lower() == "true",
         "insured": str(row.get("insured", "")).lower() == "true",

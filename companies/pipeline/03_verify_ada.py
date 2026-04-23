@@ -95,12 +95,19 @@ async def process(rows: list[dict], client: Anthropic) -> list[dict]:
 
 def main(in_path: Path, out_path: Path) -> None:
     client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    rows = list(csv.DictReader(in_path.open(newline="", encoding="utf-8")))
+    rows = list(csv.DictReader(in_path.open(newline="", encoding="utf-8-sig")))
     print(f"Verifying {len(rows)} contractors with concurrency={CONCURRENCY}")
 
     results = asyncio.run(process(rows, client))
 
-    kept = [r for r in results if r["verdict"] in ("specialist", "offers") and int(r["confidence"]) >= 60]
+    # Relaxed thresholds after Phase 0 round-1 review (Apr 23, see D-012):
+    # - specialist at ANY confidence (classifier is conservative, even low-conf specialists are real)
+    # - offers at confidence >= 40 (general contractor explicitly listing accessibility)
+    kept = [
+        r for r in results
+        if (r["verdict"] == "specialist")
+        or (r["verdict"] == "offers" and int(r["confidence"]) >= 40)
+    ]
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", newline="", encoding="utf-8") as fout:
         writer = csv.DictWriter(fout, fieldnames=list(kept[0].keys()) if kept else list(rows[0].keys()))

@@ -60,6 +60,13 @@ Append-only. Each entry is a ratified decision per the `decision-logger` pattern
 - **Decision:** Portfolio-wide docs promoted to `companies/` root; niche-specific content moved to `companies/<property>/` subfolders. Shared pipeline at `companies/pipeline/`.
 - **Rationale:** Clear parent/child structure as portfolio grows. Aligns with Chief of Staff + agent orchestration patterns from `c-level-advisor/`.
 
+## D-012 — Relaxed verifier thresholds (Phase 0 round 2)
+- **Date:** 2026-04-23
+- **Decider:** Founder (approved) + CTO (proposal)
+- **Decision:** Lower `03_verify_ada.py` pass thresholds from `(specialist|offers)+conf≥60` to `specialist @ any conf, offers @ conf≥40`. Add `tier` field to site data (specialist | offers | unverified) so UI can badge listings.
+- **Rationale:** Round-1 pass rates were too thin for a nationwide directory (AccessRemodel 20/247, WalkInTubPros 14/98). Classifier was conservative — excluding many legitimate "offers" contractors at confidence 40–59. Relaxed thresholds should expand AccessRemodel to ~60 and WalkInTubPros to ~35. Two-tier UX (Specialist vs Offers) preserves editorial moat without underpopulating city pages.
+- **Trigger to tighten again:** if user feedback shows low lead-form conversion on `offers`-tier listings at Day 30.
+
 ## D-011 — Domain purchased (WalkInTubPros)
 - **Date:** 2026-04-23
 - **Decider:** Founder
