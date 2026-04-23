@@ -60,6 +60,12 @@ Append-only. Each entry is a ratified decision per the `decision-logger` pattern
 - **Decision:** Portfolio-wide docs promoted to `companies/` root; niche-specific content moved to `companies/<property>/` subfolders. Shared pipeline at `companies/pipeline/`.
 - **Rationale:** Clear parent/child structure as portfolio grows. Aligns with Chief of Staff + agent orchestration patterns from `c-level-advisor/`.
 
+## D-011 — Domain purchased (WalkInTubPros)
+- **Date:** 2026-04-23
+- **Decider:** Founder
+- **Decision:** Registered **walkintubpros.co**.
+- **Implication:** Same `.co` TLD pattern as AccessRemodel. Canonical URLs, meta tags, email sender domains use `.co`. Portfolio domain purchases now lazy — one per niche immediately before scrape.
+
 ## D-010 — Paperclip adoption deferred to Phase 1
 - **Date:** 2026-04-19
 - **Decider:** Founder (raised) + CTO + CFO (recommendation)
