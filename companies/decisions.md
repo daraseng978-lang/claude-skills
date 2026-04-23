@@ -59,3 +59,17 @@ Append-only. Each entry is a ratified decision per the `decision-logger` pattern
 - **Decider:** CTO
 - **Decision:** Portfolio-wide docs promoted to `companies/` root; niche-specific content moved to `companies/<property>/` subfolders. Shared pipeline at `companies/pipeline/`.
 - **Rationale:** Clear parent/child structure as portfolio grows. Aligns with Chief of Staff + agent orchestration patterns from `c-level-advisor/`.
+
+## D-011 — Domain purchased (WalkInTubPros)
+- **Date:** 2026-04-23
+- **Decider:** Founder
+- **Decision:** Registered **walkintubpros.co**.
+- **Implication:** Same `.co` TLD pattern as AccessRemodel. Canonical URLs, meta tags, email sender domains use `.co`. Portfolio domain purchases now lazy — one per niche immediately before scrape.
+
+## D-010 — Paperclip adoption deferred to Phase 1
+- **Date:** 2026-04-19
+- **Decider:** Founder (raised) + CTO + CFO (recommendation)
+- **Decision:** Evaluate [Paperclip](https://paperclip.ing/) (open-source AI-agent control plane) but **defer install until Phase 1 trigger** (first paying customer OR Day 30, whichever first).
+- **Rationale:** Paperclip's value (multi-company scoping, budget gates, agent Heartbeats, goal ancestry) maps directly to this portfolio — but its ROI requires recurring agents actually running. Phase 0 has zero recurring jobs; markdown ledger (`budget-ledger.md`, `decisions.md`, `company-context.md`) is sufficient. Installing before there's anything to orchestrate is premature infra.
+- **Phase 1 install plan:** 4–6 hr setup; self-hosted Node + React; MIT license; $0 recurring. Load companies: AccessRemodel, DementiaCare, WalkInTubPros, IVFCost, ADUBuilders as separate scoped entities. Migrate budget-ledger.md into Paperclip's budget module. Wire Heartbeats for monthly re-scrape + weekly lead routing + daily moderation.
+- **Re-evaluation trigger:** Day 30 Gate #2, or first paid subscription, whichever first.

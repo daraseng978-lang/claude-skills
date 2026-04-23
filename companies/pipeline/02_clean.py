@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
-"""Step 2 — Junk-filter the raw Outscraper CSV.
+"""Step 2 — Junk-filter the raw Outscraper CSV + split by query.
 
 Drops rows matching obvious non-candidates (big-box retailers, permanently closed,
-missing website, out-of-scope categories).
+missing website, out-of-scope categories). Also routes walk-in-tub query rows to
+a separate output path so they feed WalkInTubPros instead of AccessRemodel.
 
 Stdlib only. Adapted from Frey's Step 2 Claude Code prompt — codified so it's
 deterministic and free to rerun.
 
 Usage:
-    python 02_clean.py data/01_raw.csv data/02_cleaned.csv
+    python 02_clean.py <raw_csv> <primary_out_csv> [--walkintub-out <path>]
+
+Example:
+    python 02_clean.py companies/accessremodel/data/01_raw.csv \\
+        companies/accessremodel/data/02_cleaned.csv \\
+        --walkintub-out companies/walkintubpros/data/02_cleaned.csv
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import re
-import sys
 from pathlib import Path
 
 BIG_BOX_BLOCKLIST = {
@@ -30,14 +36,25 @@ OFF_NICHE_CATEGORIES = {
     "hotel", "motel", "school", "church",
 }
 
-REQUIRED_FIELDS = ("name", "full_address", "website")
+REQUIRED_FIELDS = ("name", "address", "website")
+
+WALKINTUB_QUERY_MARKERS = ("walk in tub", "walk-in tub", "walkintub")
+
+
+def is_walkintub(row: dict) -> bool:
+    q = (row.get("query") or "").strip().lower()
+    return any(m in q for m in WALKINTUB_QUERY_MARKERS)
 
 
 def is_junk(row: dict) -> tuple[bool, str]:
     name = (row.get("name") or "").strip().lower()
     website = (row.get("website") or "").strip()
     status = (row.get("business_status") or "").strip().lower()
-    categories = (row.get("categories") or "").strip().lower()
+    cat_bits = " ".join([
+        (row.get("category") or ""),
+        (row.get("subtypes") or ""),
+        (row.get("type") or ""),
+    ]).strip().lower()
 
     for field in REQUIRED_FIELDS:
         if not (row.get(field) or "").strip():
@@ -51,7 +68,7 @@ def is_junk(row: dict) -> tuple[bool, str]:
             return True, f"bigbox:{brand}"
 
     for bad in OFF_NICHE_CATEGORIES:
-        if bad in categories:
+        if bad in cat_bits:
             return True, f"off_niche:{bad}"
 
     if not re.match(r"^https?://", website):
@@ -60,33 +77,64 @@ def is_junk(row: dict) -> tuple[bool, str]:
     return False, ""
 
 
-def main(in_path: Path, out_path: Path) -> None:
-    kept = 0
+def main(in_path: Path, primary_out: Path, walkintub_out: Path | None) -> None:
+    primary_kept = 0
+    walkintub_kept = 0
     dropped: dict[str, int] = {}
-    out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with in_path.open(newline="", encoding="utf-8") as fin, \
-         out_path.open("w", newline="", encoding="utf-8") as fout:
+    primary_out.parent.mkdir(parents=True, exist_ok=True)
+    if walkintub_out is not None:
+        walkintub_out.parent.mkdir(parents=True, exist_ok=True)
+
+    with in_path.open(newline="", encoding="utf-8-sig") as fin:
         reader = csv.DictReader(fin)
-        writer = csv.DictWriter(fout, fieldnames=reader.fieldnames or [])
-        writer.writeheader()
-        for row in reader:
-            junk, reason = is_junk(row)
-            if junk:
-                dropped[reason] = dropped.get(reason, 0) + 1
-                continue
-            writer.writerow(row)
-            kept += 1
+        fieldnames = reader.fieldnames or []
+
+        fout_primary = primary_out.open("w", newline="", encoding="utf-8")
+        fout_walkintub = walkintub_out.open("w", newline="", encoding="utf-8") if walkintub_out else None
+
+        try:
+            writer_primary = csv.DictWriter(fout_primary, fieldnames=fieldnames)
+            writer_primary.writeheader()
+            writer_walkintub = None
+            if fout_walkintub is not None:
+                writer_walkintub = csv.DictWriter(fout_walkintub, fieldnames=fieldnames)
+                writer_walkintub.writeheader()
+
+            for row in reader:
+                junk, reason = is_junk(row)
+                if junk:
+                    dropped[reason] = dropped.get(reason, 0) + 1
+                    continue
+                if writer_walkintub is not None and is_walkintub(row):
+                    writer_walkintub.writerow(row)
+                    walkintub_kept += 1
+                else:
+                    writer_primary.writerow(row)
+                    primary_kept += 1
+        finally:
+            fout_primary.close()
+            if fout_walkintub is not None:
+                fout_walkintub.close()
 
     total_dropped = sum(dropped.values())
-    print(f"Kept:    {kept:>6}")
-    print(f"Dropped: {total_dropped:>6}")
+    print(f"Primary kept:    {primary_kept:>6}  ->  {primary_out}")
+    if walkintub_out is not None:
+        print(f"WalkInTub kept:  {walkintub_kept:>6}  ->  {walkintub_out}")
+    print(f"Dropped:         {total_dropped:>6}")
     for reason, count in sorted(dropped.items(), key=lambda kv: -kv[1]):
         print(f"  {reason}: {count}")
 
 
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("raw_csv", type=Path)
+    p.add_argument("primary_out", type=Path)
+    p.add_argument("--walkintub-out", type=Path, default=None,
+                   help="Optional: route rows whose query column mentions 'walk in tub' here")
+    return p.parse_args()
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print(__doc__)
-        sys.exit(1)
-    main(Path(sys.argv[1]), Path(sys.argv[2]))
+    args = parse_args()
+    main(args.raw_csv, args.primary_out, args.walkintub_out)

@@ -22,6 +22,7 @@ Append-only. Updated by CFO. Founder signs each `Approved` line.
 |---|---|---|---|---|
 | 2026-04-19 | ~$12 | Domain registrar | accessremodel.co | Founder |
 | 2026-04-19 | ~$30 | Anthropic | API credits | Founder (separate from portfolio budget) |
+| 2026-04-23 | ~$12 | Domain registrar | walkintubpros.co | Founder |
 
 ## Per-Property Allocation
 
@@ -38,8 +39,8 @@ Append-only. Updated by CFO. Founder signs each `Approved` line.
 ## Running Balance
 
 - Approved: **$850**
-- Spent: **~$12** (AccessRemodel domain)
-- Remaining: **~$838**
+- Spent: **~$24** (AccessRemodel + WalkInTubPros domains)
+- Remaining: **~$826**
 
 ## Notes
 
