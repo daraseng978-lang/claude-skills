@@ -86,7 +86,7 @@ def main(in_path: Path, primary_out: Path, walkintub_out: Path | None) -> None:
     if walkintub_out is not None:
         walkintub_out.parent.mkdir(parents=True, exist_ok=True)
 
-    with in_path.open(newline="", encoding="utf-8") as fin:
+    with in_path.open(newline="", encoding="utf-8-sig") as fin:
         reader = csv.DictReader(fin)
         fieldnames = reader.fieldnames or []
 
