@@ -31,7 +31,7 @@ def row_to_listing(row: dict) -> dict:
         "id": slugify(f"{row['name']}-{row.get('city', '')}-{row.get('state', '')}"),
         "name": row["name"],
         "slug": slugify(row["name"]),
-        "address": row.get("full_address", ""),
+        "address": row.get("address") or row.get("full_address", ""),
         "city": row.get("city", ""),
         "state": row.get("state", ""),
         "postal_code": row.get("postal_code", ""),
@@ -53,7 +53,7 @@ def row_to_listing(row: dict) -> dict:
 
 def main(in_path: Path, out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
-    listings = [row_to_listing(r) for r in csv.DictReader(in_path.open(newline="", encoding="utf-8"))]
+    listings = [row_to_listing(r) for r in csv.DictReader(in_path.open(newline="", encoding="utf-8-sig"))]
 
     by_state: dict[str, list[str]] = defaultdict(list)
     for l in listings:
